@@ -16,23 +16,35 @@ import javax.crypto.Cipher;
 import javax.crypto.KeyAgreement;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.GCMParameterSpec;
+import javax.validation.constraints.NotBlank;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import iris.client_bff.vaccination_info.eps.InvalidPublicKeyException;
+import iris.client_bff.vaccination_info.eps.VaccinationInfoController;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 /**
  * @author Jens Kutzsche
  */
 @Service
-public class EncryptionService {
+@Slf4j
+@RequiredArgsConstructor
+public class EncryptedConnectionsService {
 
-	/**
-	 *
-	 */
+
 	private static final String ALGORITHM = "AES/GCM/NoPadding";
-	/**
-	 *
-	 */
 	private static final String PROVIDER = "BCFIPS";
+
+	private final ObjectMapper objectMapper;
+
+	public static record EncryptedDataDto(
+
+			@NotBlank String hdPublicKey,
+			@NotBlank String iv,
+			@NotBlank String tokens) {}
 
 	public KeyPair generateKeyPair() throws GeneralSecurityException {
 
@@ -86,5 +98,39 @@ public class EncryptionService {
 		return new String(cipher.doFinal(decodeFromString(encodedEncryptedData)), UTF_8);
 	}
 
+	public EncryptedDataDto encryptAndCreateResult(Object plainObject, String submitterPublicKeyBase64) {
+
+		PublicKey submitterPublicKey;
+		try {
+			submitterPublicKey = decodeFromBase64(submitterPublicKeyBase64);
+		} catch (GeneralSecurityException e) {
+
+			var msg = "The passed public key contains errors and cannot be used";
+			log.error(msg + ": ", e);
+
+			throw new InvalidPublicKeyException("submitterPublicKey: " + msg, e);
+		}
+
+		try {
+			var keyPair = generateKeyPair();
+			var key = generateAgreedKey(keyPair.getPrivate(), submitterPublicKey);
+
+			var pubKeyBase64 = encodeToBase64(keyPair.getPublic());
+			var encryptionData = encryptAndEncode(key, objectMapper.writeValueAsString(plainObject));
+
+			return new EncryptedDataDto(pubKeyBase64, encryptionData.iv(), encryptionData.data());
+		} catch (JsonProcessingException | GeneralSecurityException e) {
+
+			var msg = e instanceof JsonProcessingException
+					? "Can't write tokens to JSON"
+					: "Error during token encryption (response to the announcement)";
+			log.error(msg + ": ", e);
+
+			throw new VaccinationInfoAnnouncementException(msg, e);
+		}
+	}
+
 	public record EncryptedData(String iv, String data) {}
 }
+
+

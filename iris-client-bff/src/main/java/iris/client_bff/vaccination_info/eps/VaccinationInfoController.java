@@ -59,7 +59,6 @@ public interface VaccinationInfoController {
 			@NotBlank String tokens) {}
 
 	static record Tokens(
-
 			@NotBlank String cat,
 			@NotBlank String dat) {}
 

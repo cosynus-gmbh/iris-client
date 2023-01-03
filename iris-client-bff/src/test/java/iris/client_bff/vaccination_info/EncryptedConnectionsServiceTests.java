@@ -6,6 +6,7 @@ import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.Security;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.codec.binary.Base64;
 import org.bouncycastle.jcajce.provider.BouncyCastleFipsProvider;
 import org.junit.jupiter.api.BeforeEach;
@@ -18,9 +19,9 @@ import org.junit.jupiter.api.Test;
  */
 @Tag("encryption")
 @DisplayName("Test the encryption service for vaccination info")
-class EncryptionServiceTests {
+class EncryptedConnectionsServiceTests {
 
-	EncryptionService encryptionService;
+	EncryptedConnectionsService encryptedConnectionsService;
 	KeyPair keyPair;
 
 	@BeforeEach
@@ -29,8 +30,8 @@ class EncryptionServiceTests {
 		Security.addProvider(new BouncyCastleFipsProvider());
 		Security.setProperty("crypto.policy", "unlimited");
 
-		encryptionService = new EncryptionService();
-		keyPair = encryptionService.generateKeyPair();
+		encryptedConnectionsService = new EncryptedConnectionsService(new ObjectMapper());
+		keyPair = encryptedConnectionsService.generateKeyPair();
 	}
 
 	@Test
@@ -47,7 +48,7 @@ class EncryptionServiceTests {
 
 		var origKey = keyPair.getPublic();
 
-		var string = encryptionService.encodeToBase64(origKey);
+		var string = encryptedConnectionsService.encodeToBase64(origKey);
 
 		assertThat(Base64.isBase64(string)).isTrue();
 		assertThat(string).isEqualTo(Base64.encodeBase64String(origKey.getEncoded()));
@@ -59,7 +60,7 @@ class EncryptionServiceTests {
 
 		var origKey = keyPair.getPublic();
 
-		var key = encryptionService.decodeFromBase64(Base64.encodeBase64String(origKey.getEncoded()));
+		var key = encryptedConnectionsService.decodeFromBase64(Base64.encodeBase64String(origKey.getEncoded()));
 
 		assertThat(key).isNotNull().isEqualTo(origKey);
 	}
@@ -68,10 +69,10 @@ class EncryptionServiceTests {
 	@DisplayName("Generate agreed keys from key pairs successful")
 	void generateAgreedKey_successful() throws GeneralSecurityException {
 
-		var keyPair2 = encryptionService.generateKeyPair();
+		var keyPair2 = encryptedConnectionsService.generateKeyPair();
 
-		var key1 = encryptionService.generateAgreedKey(keyPair.getPrivate(), keyPair2.getPublic());
-		var key2 = encryptionService.generateAgreedKey(keyPair2.getPrivate(), keyPair.getPublic());
+		var key1 = encryptedConnectionsService.generateAgreedKey(keyPair.getPrivate(), keyPair2.getPublic());
+		var key2 = encryptedConnectionsService.generateAgreedKey(keyPair2.getPrivate(), keyPair.getPublic());
 
 		assertThat(key1).isNotNull().isEqualTo(key2);
 	}
@@ -80,10 +81,10 @@ class EncryptionServiceTests {
 	@DisplayName("Encrypt and decrypt successful")
 	void encryptAndDecrypt_successful() throws GeneralSecurityException {
 
-		var key = encryptionService.generateAgreedKey(keyPair.getPrivate(), keyPair.getPublic());
+		var key = encryptedConnectionsService.generateAgreedKey(keyPair.getPrivate(), keyPair.getPublic());
 
-		var encrypted = encryptionService.encryptAndEncode(key, "Test");
-		var decrypted = encryptionService.decodeAndDecrypt(key, encrypted.iv(), encrypted.data());
+		var encrypted = encryptedConnectionsService.encryptAndEncode(key, "Test");
+		var decrypted = encryptedConnectionsService.decodeAndDecrypt(key, encrypted.iv(), encrypted.data());
 
 		assertThat(encrypted).isNotNull().isNotEqualTo("Test");
 		assertThat(decrypted).isEqualTo("Test");

@@ -21,7 +21,7 @@ import io.restassured.path.json.JsonPath;
 import iris.client_bff.IrisWebIntegrationTest;
 import iris.client_bff.core.alert.AlertService;
 import iris.client_bff.proxy.EPSProxyServiceServiceClient;
-import iris.client_bff.vaccination_info.EncryptionService;
+import iris.client_bff.vaccination_info.EncryptedConnectionsService;
 import iris.client_bff.vaccination_info.VaccinationInfoAnnouncementRepository;
 import iris.client_bff.vaccination_info.VaccinationInfoRepository;
 import lombok.RequiredArgsConstructor;
@@ -60,7 +60,7 @@ class VaccinationInfoControllerImplIntegrationTests {
 
 	final MockMvc mvc;
 	final VaccinationInfoAnnouncementRepository announcements;
-	final EncryptionService encryptionService;
+	final EncryptedConnectionsService encryptedConnectionsService;
 	final VaccinationInfoRepository vaccInfos;
 
 	@MockBean
@@ -102,8 +102,8 @@ class VaccinationInfoControllerImplIntegrationTests {
 
 		var count = announcements.count();
 
-		var keyPair = encryptionService.generateKeyPair();
-		var pubKeyBase64 = encryptionService.encodeToBase64(keyPair.getPublic());
+		var keyPair = encryptedConnectionsService.generateKeyPair();
+		var pubKeyBase64 = encryptedConnectionsService.encodeToBase64(keyPair.getPublic());
 
 		var response = given()
 				.body(String.format(VALID_ANNOUNCEMENT, pubKeyBase64))
@@ -142,9 +142,9 @@ class VaccinationInfoControllerImplIntegrationTests {
 	private String decrypt(PrivateKey privateKey, String hdKeyBase64, String ivBase64, String tokensBase64)
 			throws GeneralSecurityException {
 
-		var hdKey = encryptionService.decodeFromBase64(hdKeyBase64);
-		var aesKey = encryptionService.generateAgreedKey(privateKey, hdKey);
-		var tokenJson = encryptionService.decodeAndDecrypt(aesKey, ivBase64, tokensBase64);
+		var hdKey = encryptedConnectionsService.decodeFromBase64(hdKeyBase64);
+		var aesKey = encryptedConnectionsService.generateAgreedKey(privateKey, hdKey);
+		var tokenJson = encryptedConnectionsService.decodeAndDecrypt(aesKey, ivBase64, tokensBase64);
 
 		return tokenJson;
 	}

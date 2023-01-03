@@ -358,6 +358,13 @@
 			<version>1.6.11</version>
 		</dependency>
 
+		<!-- Thinbus Srp -->
+		<dependency>
+			<groupId>org.bitbucket.simon_massey</groupId>
+			<artifactId>thinbus-srp6a-js</artifactId>
+			<version>1.6.2</version>
+		</dependency>
+
 	</dependencies>
 
 	<build>
