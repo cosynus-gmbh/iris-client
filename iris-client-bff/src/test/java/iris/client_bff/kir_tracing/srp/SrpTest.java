@@ -3,11 +3,13 @@ package iris.client_bff.kir_tracing.srp;
 import com.bitbucket.thinbus.srp6.js.*;
 import com.nimbusds.srp6.SRP6ClientCredentials;
 import iris.client_bff.IrisWebIntegrationTest;
+import iris.client_bff.config.SrpParamsConfig;
+import iris.client_bff.kir_tracing.ObjectSerializationHelper;
 import lombok.RequiredArgsConstructor;
-import org.junit.Assert;
-import org.junit.Test;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
+
 
 import static com.nimbusds.srp6.BigIntegerUtils.toHex;
 import static org.junit.Assert.assertEquals;
@@ -17,16 +19,16 @@ import static org.junit.Assert.assertEquals;
 @Tag("kir-tracing")
 @Tag("srp")
 @DisplayName("IT of srp")
-public class SrpTest {
+class SrpTest {
 
-    final static String N_base10 = "19502997308733555461855666625958719160994364695757801883048536560804281608617712589335141535572898798222757219122180598766018632900275026915053180353164617230434226106273953899391119864257302295174320915476500215995601482640160424279800690785793808960633891416021244925484141974964367107";
-    final static String g_base10 = "2";
+    final private SrpParamsConfig config;
 
     final static String username = "tom@arcot.com";
     final static String password = "password1234";
 
+
     @Test
-    public void testSrp() throws Exception {
+    void testSrp() throws Exception {
 
         // ---------------------------------------------------
         //
@@ -36,7 +38,7 @@ public class SrpTest {
 
         // We have a client
         final SRP6JavaClientSessionSHA256 client = new SRP6JavaClientSessionSHA256(
-                N_base10, g_base10);
+                config.getNBase10(), config.getGBase10());
 
         // Once and only once a random salt needs to be generated.
         final String salt = client
@@ -44,7 +46,7 @@ public class SrpTest {
 
         // The client needs to generate a verifier based on N, g, salt and H (hash).
         final HexHashedVerifierGenerator generator = new HexHashedVerifierGenerator(
-                N_base10, g_base10, SRP6JavascriptServerSessionSHA256.SHA_256);
+                config.getNBase10(), config.getGBase10(), SRP6JavascriptServerSessionSHA256.SHA_256);
 
         // The client cooks the verifier. This must be securely registered with the server.
         // Note: The verifier includes the hash of the username. So if the user changes either
@@ -59,7 +61,7 @@ public class SrpTest {
 
         // The server
         SRP6JavascriptServerSession server = new SRP6JavascriptServerSessionSHA256(
-                N_base10, g_base10);
+                config.getNBase10(), config.getGBase10());
 
 
         // The client is initialised with username and password
@@ -68,6 +70,10 @@ public class SrpTest {
         // The server generates a public challenge B based on the username, salt and verifier.
         // Note: The verifier should have been kept secret.
         String B = server.step1(username, salt, verifier);
+
+        String srpServiceSerialized = ObjectSerializationHelper.toString(server);
+
+        server = (SRP6JavascriptServerSessionSHA256) ObjectSerializationHelper.fromString(srpServiceSerialized);
 
         // The server sends the public challenge B to the client.
         // The server can can also send the salt as it is public in the protocol.

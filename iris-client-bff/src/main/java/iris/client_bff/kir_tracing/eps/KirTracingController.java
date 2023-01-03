@@ -5,7 +5,6 @@ import com.googlecode.jsonrpc4j.JsonRpcErrors;
 import com.googlecode.jsonrpc4j.JsonRpcParam;
 import iris.client_bff.core.validation.Base64;
 import iris.client_bff.core.validation.NoSignOfAttack;
-import iris.client_bff.core.validation.ValidPassword;
 import iris.client_bff.kir_tracing.KirTracingFormDto;
 import iris.client_bff.vaccination_info.VaccinationInfoAnnouncementException;
 import iris.client_bff.vaccination_info.eps.InvalidPublicKeyException;
@@ -13,6 +12,7 @@ import org.springframework.validation.annotation.Validated;
 
 import javax.validation.Valid;
 import javax.validation.constraints.*;
+import java.math.BigInteger;
 import java.util.UUID;
 
 /**
@@ -28,18 +28,31 @@ public interface KirTracingController {
 	KirConnectionResultDto requestKirConnection(
 			@JsonRpcParam(value = "connectionData") @Valid KirConnectionDto connectionData);
 
+	KirFormSubmissionResultDto generateKirAccessToken(
+			@JsonRpcParam(value = "dataAuthorizationToken") @NotNull UUID dataAuthorizationToken
+	);
+
+	KirChallengeDto challengeKir(
+			@JsonRpcParam(value = "dataAuthorizationToken") @NotNull UUID dataAuthorizationToken,
+			@JsonRpcParam(value = "accessToken") @NotNull @NoSignOfAttack String accessToken
+	);
+
 	KirFormSubmissionResultDto submitKirTracingForm(
 			@JsonRpcParam(value = "dataAuthorizationToken") @NotNull UUID dataAuthorizationToken,
-			@JsonRpcParam(value = "password") @NotNull @NoSignOfAttack @ValidPassword String password,
+			@JsonRpcParam(value = "salt") @NotNull @NoSignOfAttack String salt,
+			@JsonRpcParam(value = "verifier") @NotNull @NoSignOfAttack String verifier,
+			@JsonRpcParam(value = "accessToken") @NotNull @NoSignOfAttack String accessToken,
 			@JsonRpcParam(value = "form") @NotNull @Valid KirTracingFormDto form
 	);
 
 	KirFormSubmissionResultDto updateKirTracingForm(
 			@JsonRpcParam(value = "dataAuthorizationToken") @NotNull UUID dataAuthorizationToken,
-			@JsonRpcParam(value = "password") @NotNull @NoSignOfAttack String password,
+			@JsonRpcParam(value = "a") @NotNull BigInteger a,
+			@JsonRpcParam(value = "m1") @NotNull BigInteger m1,
 			@JsonRpcParam(value = "accessToken") @NotNull @NoSignOfAttack String accessToken,
 			@JsonRpcParam(value = "form") @NotNull @Valid KirTracingFormDto form
 	);
+
 
 	// DTOs Announcement
 	static record KirConnectionDto(

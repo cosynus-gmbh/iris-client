@@ -4,9 +4,7 @@ import iris.client_bff.config.MapStructCentralConfig;
 
 import iris.client_bff.kir_tracing.KirTracingForm;
 import iris.client_bff.kir_tracing.KirTracingFormDto;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.NullValuePropertyMappingStrategy;
+import org.mapstruct.*;
 
 import java.util.UUID;
 
@@ -21,5 +19,8 @@ public interface KirTracingFormDataMapper {
     @Mapping(source= "targetDisease", target="targetDisease",
             nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.SET_TO_DEFAULT)
     KirTracingFormDto toDto(KirTracingForm form);
+
+    @BeanMapping(nullValuePropertyMappingStrategy =  NullValuePropertyMappingStrategy.IGNORE)
+    KirTracingForm update(@MappingTarget KirTracingForm entity, KirTracingFormDto updateEntity);
 
 }

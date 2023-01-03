@@ -46,7 +46,8 @@ class KirTracingControllerTest {
     void getKirTracingForms_AllResults() {
 
         KirTracingForm form = KirTracingForm.builder()
-                .password("TestpassUnencrypted")
+                .srpSalt("TestpassUnencrypted")
+                .srpVerifier("Testverifier")
                 .accessToken(RandomStringUtils.randomAlphanumeric(10)
                         .toUpperCase())
                 .person(KirTracingForm.Person.builder()

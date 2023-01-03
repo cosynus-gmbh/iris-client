@@ -1,11 +1,13 @@
 package iris.client_bff.kir_tracing.eps;
 
+import com.nimbusds.srp6.SRP6ClientCredentials;
 import iris.client_bff.kir_tracing.KirTracingFormDto;
 import iris.client_bff.kir_tracing.KirTracingService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.math.BigInteger;
 import java.util.UUID;
 
 @Service
@@ -29,14 +31,44 @@ public class KirTracingControllerImpl implements KirTracingController {
     }
 
     @Override
-    public KirFormSubmissionResultDto submitKirTracingForm(UUID dataAuthorizationToken, String password, KirTracingFormDto formDto) {
+    public KirFormSubmissionResultDto generateKirAccessToken(UUID dataAuthorizationToken) {
+        log.debug("Start generating KIR access token (JSON-RPC interface)");
+
+        if (!service.validateConnection(dataAuthorizationToken)) {
+            throw new IllegalArgumentException("Unknown dataAuthorizationToken: " + dataAuthorizationToken);
+        }
+
+        var result = service.generateAccessToken();
+
+        log.trace("Finished generating KIR access token (JSON-RPC interface)");
+
+        return result;
+    }
+
+    @Override
+    public KirChallengeDto challengeKir(UUID dataAuthorizationToken, String accessToken) {
+        log.debug("Start generating KIR access token (JSON-RPC interface)");
+
+        if (!service.validateConnection(dataAuthorizationToken)) {
+            throw new IllegalArgumentException("Unknown dataAuthorizationToken: " + dataAuthorizationToken);
+        }
+
+        var result = service.createChallenge(accessToken);
+
+        log.trace("Finished generating KIR access token (JSON-RPC interface)");
+
+        return result;
+    }
+
+    @Override
+    public KirFormSubmissionResultDto submitKirTracingForm(UUID dataAuthorizationToken, String salt, String verifier, String accessToken, KirTracingFormDto formDto) {
         log.debug("Start submitting KIR form (JSON-RPC interface)");
 
         if (!service.validateConnection(dataAuthorizationToken)) {
             throw new IllegalArgumentException("Unknown dataAuthorizationToken: " + dataAuthorizationToken);
         }
 
-        var result = service.submitKirTracingForm(password, formDto);
+        var result = service.submitKirTracingForm(salt, verifier, accessToken, formDto);
 
         log.trace("Finish submitting KIR form (JSON-RPC interface)");
 
@@ -45,7 +77,7 @@ public class KirTracingControllerImpl implements KirTracingController {
     }
 
     @Override
-    public KirFormSubmissionResultDto updateKirTracingForm(UUID dataAuthorizationToken, String password, String accessToken, KirTracingFormDto formDto) {
+    public KirFormSubmissionResultDto updateKirTracingForm(UUID dataAuthorizationToken, BigInteger a, BigInteger m1, String accessToken, KirTracingFormDto formDto) {
 
         log.debug("Start updating KIR form (JSON-RPC interface)");
 
@@ -53,7 +85,9 @@ public class KirTracingControllerImpl implements KirTracingController {
             throw new IllegalArgumentException("Unknown dataAuthorizationToken: " + dataAuthorizationToken);
         }
 
-        var result = service.updateKirTracingForm(password, accessToken, formDto);
+        SRP6ClientCredentials credentials = new SRP6ClientCredentials(a, m1);
+
+        var result = service.updateKirTracingForm(credentials, accessToken, formDto);
 
         log.trace("Finish updating KIR form (JSON-RPC interface)");
 

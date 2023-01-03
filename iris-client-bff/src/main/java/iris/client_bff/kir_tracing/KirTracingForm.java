@@ -1,5 +1,8 @@
 package iris.client_bff.kir_tracing;
 
+import com.bitbucket.thinbus.srp6.js.SRP6JavascriptServerSession;
+import com.bitbucket.thinbus.srp6.js.SRP6JavascriptServerSessionSHA256;
+import com.nimbusds.srp6.SRP6ServerSession;
 import iris.client_bff.core.model.Address;
 import iris.client_bff.core.model.Aggregate;
 import iris.client_bff.core.model.IdWithUuid;
@@ -13,6 +16,7 @@ import org.hibernate.search.mapper.pojo.mapping.definition.annotation.Indexed;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.IndexedEmbedded;
 
 import javax.persistence.*;
+import java.io.IOException;
 import java.util.UUID;
 
 /**
@@ -20,7 +24,6 @@ import java.util.UUID;
  */
 @Entity
 @Data
-@Setter(AccessLevel.PACKAGE)
 @EqualsAndHashCode(callSuper = true, of = {})
 @Builder
 @ToString
@@ -36,6 +39,8 @@ public class KirTracingForm extends Aggregate<KirTracingForm, KirTracingForm.Kir
     private String srpSalt;
 
     private String srpVerifier;
+
+    private String srpSession;
 
     @Builder.Default
     @Column(unique = true)
@@ -72,6 +77,19 @@ public class KirTracingForm extends Aggregate<KirTracingForm, KirTracingForm.Kir
         @Override
         protected UUID getBasicId() {
             return id;
+        }
+    }
+
+    @SneakyThrows
+    public void setSrpSession(SRP6JavascriptServerSession session) {
+        this.srpSession = ObjectSerializationHelper.toString(session);
+    }
+
+    public SRP6JavascriptServerSessionSHA256 getSrpSession() {
+        try {
+            return (SRP6JavascriptServerSessionSHA256) ObjectSerializationHelper.fromString(this.srpSession);
+        } catch (Exception e) {
+          return null;
         }
     }
 

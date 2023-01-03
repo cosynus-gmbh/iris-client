@@ -3,6 +3,7 @@ package iris.client_bff.kir_tracing;
 import iris.client_bff.core.serialization.DefuseJsonString;
 import iris.client_bff.core.validation.AttackDetector;
 import lombok.Data;
+import lombok.ToString;
 import org.springframework.validation.annotation.Validated;
 
 import javax.validation.Valid;
@@ -10,6 +11,7 @@ import javax.validation.constraints.NotNull;
 
 @Data
 @Validated
+@ToString
 public class KirTracingFormDto {
 
     @Valid

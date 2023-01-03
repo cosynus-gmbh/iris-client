@@ -1,18 +1,23 @@
 package iris.client_bff.kir_tracing;
 
+import com.bitbucket.thinbus.srp6.js.SRP6JavascriptServerSession;
+import com.bitbucket.thinbus.srp6.js.SRP6JavascriptServerSessionSHA256;
+import com.nimbusds.srp6.SRP6ClientCredentials;
+import iris.client_bff.config.SrpParamsConfig;
 import iris.client_bff.core.alert.AlertService;
 import iris.client_bff.core.database.HibernateSearcher;
 import iris.client_bff.kir_tracing.IncomingKirConnection.IncomingKirConnectionIdentifier;
+import iris.client_bff.kir_tracing.eps.KirChallengeDto;
 import iris.client_bff.kir_tracing.eps.KirTracingController.KirConnectionDto;
 import iris.client_bff.kir_tracing.eps.KirTracingController.KirConnectionResultDto;
 import iris.client_bff.kir_tracing.eps.KirTracingController.KirFormSubmissionResultDto;
 import iris.client_bff.kir_tracing.mapper.KirTracingFormDataMapper;
 import iris.client_bff.proxy.IRISAnnouncementException;
 import iris.client_bff.proxy.ProxyServiceClient;
-import iris.client_bff.vaccination_info.*;
+import iris.client_bff.vaccination_info.EncryptedConnectionsService;
 import iris.client_bff.vaccination_info.eps.VaccinationInfoController;
+import lombok.Data;
 import lombok.RequiredArgsConstructor;
-import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.ConstructorBinding;
@@ -24,10 +29,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 
 import javax.validation.constraints.NotNull;
+import java.security.InvalidParameterException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
+
+import static com.nimbusds.srp6.BigIntegerUtils.toHex;
 
 /**
  * @author Tim Lusa
@@ -37,139 +45,188 @@ import java.util.UUID;
 @Slf4j
 public class KirTracingService {
 
-	private static final String[] FIELDS = { "password" };
+    private static final String[] FIELDS = {"password"};
 
-	private final ProxyServiceClient proxyClient;
-	private final IncomingKirConnectionRepository incomingConnections;
-	private final KirTracingFormRepository tracingForms;
+    private final ProxyServiceClient proxyClient;
+    private final IncomingKirConnectionRepository incomingConnections;
+    private final KirTracingFormRepository tracingForms;
 
-	private final KirTracingFormDataMapper mapper;
+    private final SrpParamsConfig srpParamsConfig;
 
-	private final PasswordEncoder passwordEncoder;
+    private final KirTracingFormDataMapper mapper;
 
-	private final Properties properties;
-	private final AlertService alertService;
-	private final HibernateSearcher searcher;
-	private final EncryptedConnectionsService encryptedConnectionsService;
+    private final PasswordEncoder passwordEncoder;
 
-	public KirConnectionResultDto requestIncomingKirConnectionParameters(KirConnectionDto connectionData) {
+    private final Properties properties;
+    private final AlertService alertService;
+    private final HibernateSearcher searcher;
+    private final EncryptedConnectionsService encryptedConnectionsService;
 
-		IncomingKirConnection connection = announceIncomingKirConnection();
+    public KirConnectionResultDto requestIncomingKirConnectionParameters(KirConnectionDto connectionData) {
 
-		try {
+        IncomingKirConnection connection = announceIncomingKirConnection();
 
-			var tokens = new VaccinationInfoController.Tokens(
-					connection.getAnnouncementToken(),
-					connection.getId().toString());
+        try {
 
-			EncryptedConnectionsService.EncryptedDataDto encryptedData =
-					encryptedConnectionsService.encryptAndCreateResult(tokens, connectionData.submitterPublicKey());
+            var tokens = new VaccinationInfoController.Tokens(
+                    connection.getAnnouncementToken(),
+                    connection.getId()
+                            .toString());
 
-			return (new KirConnectionResultDto(encryptedData.hdPublicKey(), encryptedData.iv(), encryptedData.tokens()));
-		} catch (Exception e) {
-			removeIncomingConnection(connection.getId());
-			throw e;
-		}
+            EncryptedConnectionsService.EncryptedDataDto encryptedData =
+                    encryptedConnectionsService.encryptAndCreateResult(tokens, connectionData.submitterPublicKey());
 
-	}
+            return (new KirConnectionResultDto(encryptedData.hdPublicKey(), encryptedData.iv(), encryptedData.tokens()));
+        } catch (Exception e) {
+            removeIncomingConnection(connection.getId());
+            throw e;
+        }
 
-	private void removeIncomingConnection(IncomingKirConnectionIdentifier connectionId) {
+    }
 
-		log.trace("Removing IncomingKirConnection");
+    private void removeIncomingConnection(IncomingKirConnectionIdentifier connectionId) {
 
-		Optional<IncomingKirConnection> connection = incomingConnections.findById(connectionId);
-		if (connection.isEmpty()) return;
-		try {
-			proxyClient.abortAnnouncement(connection.get().getAnnouncementToken());
-		} catch (IRISAnnouncementException e) {
-			log.error(String.format("Unable to abort announcement %s", connection.get().getAnnouncementToken()));
-		}
-		incomingConnections.deleteById(connectionId);
+        log.trace("Removing IncomingKirConnection");
 
-		log.debug("Removing IncomingKirConnection was successful");
-	}
+        Optional<IncomingKirConnection> connection = incomingConnections.findById(connectionId);
+        if (connection.isEmpty()) return;
+        try {
+            proxyClient.abortAnnouncement(connection.get()
+                    .getAnnouncementToken());
+        } catch (IRISAnnouncementException e) {
+            log.error(String.format("Unable to abort announcement %s", connection.get()
+                    .getAnnouncementToken()));
+        }
+        incomingConnections.deleteById(connectionId);
 
-	private IncomingKirConnection announceIncomingKirConnection() {
+        log.debug("Removing IncomingKirConnection was successful");
+    }
 
-		log.trace("Creating IncomingKirConnection");
+    private IncomingKirConnection announceIncomingKirConnection() {
 
-		String announcementToken;
-		try {
-			announcementToken = proxyClient.announce(Instant.now().plus(properties.getExpirationDuration()));
-		} catch (IRISAnnouncementException e) {
+        log.trace("Creating IncomingKirConnection");
 
-			var msg = "Proxy announcement failed";
-			log.error(msg + ": ", e);
+        String announcementToken;
+        try {
+            announcementToken = proxyClient.announce(Instant.now()
+                    .plus(properties.getExpirationDuration()));
+        } catch (IRISAnnouncementException e) {
 
-			throw new IncomingKirConnectionAnnouncementException(msg, e);
-		}
+            var msg = "Proxy announcement failed";
+            log.error(msg + ": ", e);
 
-		var incomingKirConnection = IncomingKirConnection.of(announcementToken);
+            throw new IncomingKirConnectionAnnouncementException(msg, e);
+        }
 
-		incomingKirConnection = incomingConnections.save(incomingKirConnection);
+        var incomingKirConnection = IncomingKirConnection.of(announcementToken);
 
-		log.debug("Creating IncomingKirConnection was successful");
+        incomingKirConnection = incomingConnections.save(incomingKirConnection);
 
-		return incomingKirConnection;
-	}
+        log.debug("Creating IncomingKirConnection was successful");
 
-	public Boolean validateConnection(UUID dat) {
-		log.debug("Validatiing connection");
-		Optional<IncomingKirConnection> connection = incomingConnections.findById(IncomingKirConnectionIdentifier.of(dat));
-		log.debug(String.format("Connection is valid: %s", connection.isPresent()));
-		connection.ifPresent(incomingKirConnection -> {
-			removeIncomingConnection(incomingKirConnection.getId());
-		});
-		return connection.isPresent();
-	}
+        return incomingKirConnection;
+    }
 
-	public KirFormSubmissionResultDto submitKirTracingForm(String password, KirTracingFormDto form) {
+    public Boolean validateConnection(UUID dat) {
+        log.debug("Validatiing connection");
+        Optional<IncomingKirConnection> connection = incomingConnections.findById(IncomingKirConnectionIdentifier.of(dat));
+        log.debug(String.format("Connection is valid: %s", connection.isPresent()));
+        connection.ifPresent(incomingKirConnection -> {
+            removeIncomingConnection(incomingKirConnection.getId());
+        });
+        return connection.isPresent();
+    }
 
-		KirTracingForm tracingForm = KirTracingForm.builder()
-				.password(passwordEncoder.encode(password))
-				.person(mapper.toEntity(form.getPerson()))
-				.build();
+    public KirFormSubmissionResultDto submitKirTracingForm(String srpSalt, String srpVerifier, String accessToken, KirTracingFormDto form) {
 
-		tracingForms.save(tracingForm);
+        KirTracingForm targetForm = tracingForms.findByAccessToken(accessToken)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid credentials"));
 
-		return new KirFormSubmissionResultDto(tracingForm.getAccessToken());
-	}
+        mapper.update(targetForm, form);
+        targetForm.setSrpSalt(srpSalt);
+        targetForm.setSrpVerifier(srpVerifier);
 
-	public KirFormSubmissionResultDto updateKirTracingForm(String password, String accessToken, KirTracingFormDto formDto) {
+        tracingForms.save(targetForm);
 
-		KirTracingForm form = tracingForms.findByAccessToken(accessToken).orElseThrow(() -> new IllegalArgumentException("Invalid credentials"));
+        return new KirFormSubmissionResultDto(targetForm.getAccessToken());
+    }
 
-		if (!passwordEncoder.matches(password, form.getPassword())) throw new IllegalArgumentException("Invalid credentials");
+    public KirFormSubmissionResultDto updateKirTracingForm(SRP6ClientCredentials credentials, String accessToken, KirTracingFormDto formDto) {
 
-		return new KirFormSubmissionResultDto(accessToken);
-	}
+        KirTracingForm form = tracingForms.findByAccessToken(accessToken)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid credentials"));
 
-	public Page<KirTracingForm> search(String searchString, Pageable pageable) {
+        SRP6JavascriptServerSession srpValidator = form.getSrpSession();
+        if (srpValidator == null) throw new IllegalArgumentException("No session available");
+        try {
+            String M2 = srpValidator.step2(toHex(credentials.A), toHex(credentials.M1));
+        } catch (Exception e) {
+            log.error(e.getMessage(), e);
+            throw new IllegalArgumentException("Invalid credentials");
+        }
 
-		var result = searcher.search(
-				searchString,
-				pageable,
-				FIELDS,
-				it -> it,
-				KirTracingForm.class);
+        form = mapper.update(form, formDto);
+        form.setSrpSession(null);
+        tracingForms.save(form);
+        return new KirFormSubmissionResultDto(accessToken);
+    }
 
-		return new PageImpl<>(result.hits(), pageable, result.total().hitCount());
-	}
+    public Page<KirTracingForm> search(String searchString, Pageable pageable) {
 
-	public Page<KirTracingForm> getAll(Pageable pageable) {
-		return tracingForms.findAll(pageable);
-	}
+        var result = searcher.search(
+                searchString,
+                pageable,
+                FIELDS,
+                it -> it,
+                KirTracingForm.class);
 
-	@ConfigurationProperties("iris.client.kirtracing")
-	@ConstructorBinding
-	@Validated
-	@Value
-	static class Properties {
+        return new PageImpl<>(result.hits(), pageable, result.total()
+                .hitCount());
+    }
 
-		/**
-		 * Defines the {@link Duration} after that a vaccination info announcement will be expire.
-		 */
-		@NotNull
-		private Duration expirationDuration;
-	}
+    public Page<KirTracingForm> getAll(Pageable pageable) {
+        return tracingForms.findAll(pageable);
+    }
+
+    public KirFormSubmissionResultDto generateAccessToken() {
+        KirTracingForm tracingForm = KirTracingForm.builder()
+                .build();
+
+        tracingForms.save(tracingForm);
+
+        return new KirFormSubmissionResultDto(tracingForm.getAccessToken());
+    }
+
+    public KirChallengeDto createChallenge(String accessToken) {
+
+        KirTracingForm form = tracingForms.findByAccessToken(accessToken)
+                .orElseThrow(() -> new InvalidParameterException("Invalid access token"));
+
+        if (form.getSrpSalt().isEmpty() || form.getSrpVerifier().isEmpty()) throw new InvalidParameterException("Invalid credentials");
+
+        SRP6JavascriptServerSession srpValidator = new SRP6JavascriptServerSessionSHA256(srpParamsConfig.getNBase10(), srpParamsConfig.getGBase10());
+
+        String challenge = srpValidator.step1(form.getAccessToken(), form.getSrpSalt(), form.getSrpVerifier());
+
+        form.setSrpSession(srpValidator);
+
+        tracingForms.save(form);
+
+        return KirChallengeDto.builder()
+                .challenge(challenge)
+                .build();
+    }
+
+    @ConfigurationProperties("iris.client.kirtracing")
+    @ConstructorBinding
+    @Validated
+    @Data
+    static class Properties {
+
+        /**
+         * Defines the {@link Duration} after that a vaccination info announcement will be expire.
+         */
+        @NotNull
+        private Duration expirationDuration;
+    }
 }

@@ -29,6 +29,30 @@ public interface KirTracingTestData {
 			}
 			""";
 
+	String JSON_RPC_CHALLENGE_REQUEST = """
+			{
+			    "id":"1",
+			    "jsonrpc":"2.0",
+			    "method":"challengeKir",
+			    "params":{
+			    		"_client":{"name":"hd-1"},
+			    		%s
+			    }
+			}
+			""";
+
+	String JSON_RPC_ACCESS_TOKEN_REQUEST = """
+			{
+			    "id":"1",
+			    "jsonrpc":"2.0",
+			    "method":"generateKirAccessToken",
+			    "params":{
+			    		"_client":{"name":"hd-1"},
+			    		%s
+			    }
+			}
+			""";
+
 	String JSON_RPC_UPDATE_REQUEST = """
 			{
 			    "id":"1",
@@ -49,7 +73,9 @@ public interface KirTracingTestData {
 
 	String VALID_FORM_SUBMISSION_REQUEST = String.format(JSON_RPC_SUBMIT_REQUEST, """
 			"dataAuthorizationToken":"%s",
-			"password":"%s",
+			"salt":"%s",
+			"verifier":"%s",
+			"accessToken": "%s",
 			"form":{
 				"person": {
 					"mobilePhone":"+4915147110815"
@@ -57,13 +83,23 @@ public interface KirTracingTestData {
 			}
 			""");
 
+	String VALID_CHALLENGE_REQUEST = String.format(JSON_RPC_CHALLENGE_REQUEST, """
+			"dataAuthorizationToken":"%s",
+			"accessToken":"%s"
+			""");
+
+	String VALID_GENERATE_ACCESS_TOKEN_REQUEST = String.format(JSON_RPC_ACCESS_TOKEN_REQUEST, """
+			"dataAuthorizationToken":"%s"
+			""");
+
 	String VALID_FORM_UPDATE_REQUEST = String.format(JSON_RPC_UPDATE_REQUEST, """
 			"dataAuthorizationToken":"%s",
-			"password":"%s",
+			"a": "%s",
+			"m1": "%s",
 			"accessToken":"%s",
 			"form":{
 			"person": {
-					"mobilePhone":"+4915147110815"
+					"mobilePhone":"+4915108154711"
 				}
 			}
 			""");

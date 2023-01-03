@@ -1,11 +1,15 @@
 package iris.client_bff.kir_tracing.eps;
 
+import com.bitbucket.thinbus.srp6.js.*;
+import com.nimbusds.srp6.SRP6ClientCredentials;
+import com.nimbusds.srp6.SRP6Exception;
 import io.restassured.builder.ResponseSpecBuilder;
 import io.restassured.module.mockmvc.RestAssuredMockMvc;
 import io.restassured.module.mockmvc.specification.MockMvcRequestSpecBuilder;
 import io.restassured.parsing.Parser;
 import io.restassured.path.json.JsonPath;
 import iris.client_bff.IrisWebIntegrationTest;
+import iris.client_bff.config.SrpParamsConfig;
 import iris.client_bff.kir_tracing.IncomingKirConnection;
 import iris.client_bff.kir_tracing.IncomingKirConnectionRepository;
 import iris.client_bff.kir_tracing.KirTracingForm;
@@ -28,6 +32,7 @@ import java.time.Instant;
 import java.util.Locale;
 import java.util.UUID;
 
+import static com.nimbusds.srp6.BigIntegerUtils.toHex;
 import static io.restassured.module.mockmvc.RestAssuredMockMvc.given;
 import static iris.client_bff.kir_tracing.eps.KirTracingTestData.*;
 import static iris.client_bff.matchers.IrisMatchers.isCatWith;
@@ -37,8 +42,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.HamcrestCondition.matching;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.verify;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.OK;
@@ -49,6 +53,8 @@ import static org.springframework.http.HttpStatus.OK;
 @Tag("json-rpc-controller")
 @DisplayName("IT of JSON-RPC controller for kir tracing")
 class KirTracingControllerIntegrationTest {
+
+    final private SrpParamsConfig srpParamsConfig;
 
     static final String JSON_RPC = "application/json-rpc";
 
@@ -163,7 +169,7 @@ class KirTracingControllerIntegrationTest {
         incomingConnections.save(incomingKirConnection);
 
         given()
-                .body(String.format(VALID_FORM_SUBMISSION_REQUEST, UUID.randomUUID(), "Iris$Frankfurt2022!"))
+                .body(String.format(VALID_FORM_SUBMISSION_REQUEST, UUID.randomUUID(), 1, 2, UUID.randomUUID()))
 
                 .when()
                 .post("/data-submission-rpc")
@@ -175,8 +181,8 @@ class KirTracingControllerIntegrationTest {
     }
 
     @Test
-    @DisplayName("submit kir tracing form: valid dat ⇒ 💾 kirtracingform + 🔙 auth token")
-    void submitKirTracingForm_ValidRequest() {
+    @DisplayName("generate kir access token for form: valid dat ⇒ 💾 kir tracing form + 🔙 access token")
+    void generateKirAccessToken_ValidRequest() {
 
         UUID cat = UUID.randomUUID();
         IncomingKirConnection incomingKirConnection = IncomingKirConnection.of(cat.toString());
@@ -186,7 +192,7 @@ class KirTracingControllerIntegrationTest {
         var formsCount = kirTracingForms.count();
 
         var response = given()
-                .body(String.format(VALID_FORM_SUBMISSION_REQUEST, dat, "Iris$Frankfurt2022!"))
+                .body(String.format(VALID_GENERATE_ACCESS_TOKEN_REQUEST, dat))
 
                 .when()
                 .post("/data-submission-rpc")
@@ -202,7 +208,6 @@ class KirTracingControllerIntegrationTest {
 
         KirTracingForm kirTracingForm = kirTracingForms.findByAccessToken(accessToken).get();
 
-        assertTrue(passwordEncoder.matches("Iris$Frankfurt2022!", kirTracingForm.getPassword()));
         assertEquals(kirTracingForm.getAccessToken(), accessToken);
         assertEquals(kirTracingForm.getTargetDisease(), KirTracingForm.Disease.COVID_19);
 
@@ -210,25 +215,33 @@ class KirTracingControllerIntegrationTest {
     }
 
     @Test
-    @DisplayName("update kir tracing form: valid request ⇒ 💾 kirtracingform + 🔙 auth token")
-    void updateKirTracingForm_ValidRequest() {
+    @DisplayName("submit kir tracing form: valid dat ⇒ 💾 kirtracingform + 🔙 auth token")
+    void submitKirTracingForm_ValidRequest() {
 
         UUID cat = UUID.randomUUID();
         IncomingKirConnection incomingKirConnection = IncomingKirConnection.of(cat.toString());
         UUID dat = incomingKirConnection.getId().toUuid();
         incomingConnections.save(incomingKirConnection);
 
-        KirTracingForm form = kirTracingForms.save(KirTracingForm.builder()
-                        .password(passwordEncoder.encode("Iris$Frankfurt2022!"))
-                .person(KirTracingForm.Person.builder()
-                        .mobilePhone("+4915147110815")
-                        .build())
-                .build());
-
         var formsCount = kirTracingForms.count();
 
+        final KirTracingForm initialForm = KirTracingForm.builder().build();
+
+        kirTracingForms.save(initialForm);
+
+        final SRP6JavaClientSessionSHA256 client = new SRP6JavaClientSessionSHA256(
+                srpParamsConfig.getNBase10(), srpParamsConfig.getGBase10());
+
+        final String salt = client
+                .generateRandomSalt(SRP6JavascriptServerSessionSHA256.HASH_BYTE_LENGTH);
+
+        final HexHashedVerifierGenerator generator = new HexHashedVerifierGenerator(
+                srpParamsConfig.getNBase10(), srpParamsConfig.getGBase10(), SRP6JavascriptServerSessionSHA256.SHA_256);
+
+        final String verifier = generator.generateVerifier(salt, initialForm.getAccessToken(), "Iris$Frankfurt2022!");
+
         var response = given()
-                .body(String.format(VALID_FORM_UPDATE_REQUEST, dat, "Iris$Frankfurt2022!", form.getAccessToken()))
+                .body(String.format(VALID_FORM_SUBMISSION_REQUEST, dat, salt, verifier, initialForm.getAccessToken()))
 
                 .when()
                 .post("/data-submission-rpc")
@@ -242,15 +255,74 @@ class KirTracingControllerIntegrationTest {
 
         assertThat(accessToken).isNotBlank().hasSize(10);
 
-        assertTrue(passwordEncoder.matches("Iris$Frankfurt2022!", form.getPassword()));
-        assertEquals(form.getAccessToken(), accessToken);
+        KirTracingForm submittedFormInDb = kirTracingForms.findByAccessToken(accessToken).get();
 
-        assertEquals(formsCount, kirTracingForms.count());
+        assertEquals(verifier, submittedFormInDb.getSrpVerifier());
+        assertEquals(salt, submittedFormInDb.getSrpSalt());
+        assertEquals(initialForm.getAccessToken(), accessToken);
+        assertEquals(submittedFormInDb.getTargetDisease(), KirTracingForm.Disease.COVID_19);
+
+        assertEquals(formsCount + 1, kirTracingForms.count());
     }
 
     @Test
-    @DisplayName("update kir tracing form: invalid password ⇒ 💾 nothing + 🔙 error")
-    void updateKirTracingForm_InvalidPassword() {
+    @DisplayName("challenge kir: valid dat and access token ⇒ 💾 session + 🔙 challenge")
+    void challengeKir_ValidRequest() {
+
+        UUID cat = UUID.randomUUID();
+        IncomingKirConnection incomingKirConnection = IncomingKirConnection.of(cat.toString());
+        UUID dat = incomingKirConnection.getId().toUuid();
+        incomingConnections.save(incomingKirConnection);
+
+        var formsCount = kirTracingForms.count();
+
+        final KirTracingForm initialForm = KirTracingForm.builder().build();
+
+        final SRP6JavaClientSessionSHA256 client = new SRP6JavaClientSessionSHA256(
+                srpParamsConfig.getNBase10(), srpParamsConfig.getGBase10());
+
+        final String salt = client
+                .generateRandomSalt(SRP6JavascriptServerSessionSHA256.HASH_BYTE_LENGTH);
+
+        final HexHashedVerifierGenerator generator = new HexHashedVerifierGenerator(
+                srpParamsConfig.getNBase10(), srpParamsConfig.getGBase10(), SRP6JavascriptServerSessionSHA256.SHA_256);
+
+        final String verifier = generator.generateVerifier(salt, initialForm.getAccessToken(), "Iris$Frankfurt2022!");
+
+        initialForm.setSrpVerifier(verifier);
+        initialForm.setSrpSalt(salt);
+        kirTracingForms.save(initialForm);
+
+        var response = given()
+                .body(String.format(VALID_CHALLENGE_REQUEST, dat, initialForm.getAccessToken()))
+
+                .when()
+                .post("/data-submission-rpc")
+
+                .then()
+                .status(OK)
+                .extract()
+                .jsonPath();
+
+        var challenge = response.getString("result.challenge");
+
+        assertThat(challenge).isNotBlank();
+
+        KirTracingForm submittedFormInDb = kirTracingForms.findByAccessToken(initialForm.getAccessToken()).get();
+
+        assertEquals(verifier, submittedFormInDb.getSrpVerifier());
+        assertEquals(salt, submittedFormInDb.getSrpSalt());
+        assertEquals(submittedFormInDb.getAccessToken(), initialForm.getAccessToken());
+        assertEquals(submittedFormInDb.getTargetDisease(), KirTracingForm.Disease.COVID_19);
+        assertNotNull(submittedFormInDb.getSrpSession());
+        assertEquals(submittedFormInDb.getSrpSession().getPublicServerValue(), challenge);
+
+        assertEquals(formsCount + 1, kirTracingForms.count());
+    }
+
+    @Test
+    @DisplayName("update kir tracing form: valid request ⇒ 💾 kirtracingform + 🔙 auth token")
+    void updateKirTracingForm_ValidRequest() throws Exception {
 
         UUID cat = UUID.randomUUID();
         IncomingKirConnection incomingKirConnection = IncomingKirConnection.of(cat.toString());
@@ -258,16 +330,159 @@ class KirTracingControllerIntegrationTest {
         incomingConnections.save(incomingKirConnection);
 
         KirTracingForm form = kirTracingForms.save(KirTracingForm.builder()
-                .password(passwordEncoder.encode("Iris$Frankfurt2022!"))
+
                 .person(KirTracingForm.Person.builder()
                         .mobilePhone("+4915147110815")
                         .build())
                 .build());
 
+        final SRP6JavaClientSessionSHA256 client = new SRP6JavaClientSessionSHA256(
+                srpParamsConfig.getNBase10(), srpParamsConfig.getGBase10());
+
+        final String salt = client
+                .generateRandomSalt(SRP6JavascriptServerSessionSHA256.HASH_BYTE_LENGTH);
+
+        final HexHashedVerifierGenerator generator = new HexHashedVerifierGenerator(
+                srpParamsConfig.getNBase10(), srpParamsConfig.getGBase10(), SRP6JavascriptServerSessionSHA256.SHA_256);
+
+        final String verifier = generator.generateVerifier(salt, form.getAccessToken(), "Iris$Frankfurt2022!");
+
+        SRP6JavascriptServerSession srpValidator = new SRP6JavascriptServerSessionSHA256(
+                srpParamsConfig.getNBase10(), srpParamsConfig.getGBase10());
+
+        String serverChallenge = srpValidator.step1(form.getAccessToken(), salt, verifier);
+
+        form.setSrpSession(srpValidator);
+        form.setSrpSalt(salt);
+        form.setSrpVerifier(verifier);
+        kirTracingForms.save(form);
+
         var formsCount = kirTracingForms.count();
 
+        client.step1(form.getAccessToken(), "Iris$Frankfurt2022!");
+
+        SRP6ClientCredentials credentials = client.step2(form.getSrpSalt(), serverChallenge);
+
         var response = given()
-                .body(String.format(VALID_FORM_UPDATE_REQUEST, dat, "WrongPassword!", form.getAccessToken()))
+                .body(String.format(VALID_FORM_UPDATE_REQUEST, dat, credentials.A, credentials.M1, form.getAccessToken()))
+
+                .when()
+                .post("/data-submission-rpc")
+
+                .then()
+                .status(OK)
+                .extract()
+                .jsonPath();
+
+        var accessToken = response.getString("result.accessToken");
+
+        KirTracingForm formResult = kirTracingForms.findByAccessToken(accessToken).get();
+
+        assertThat(accessToken).isNotBlank().hasSize(10);
+        assertEquals(accessToken, formResult.getAccessToken());
+        assertEquals(formsCount, kirTracingForms.count());
+        assertEquals(null, formResult.getSrpSession());
+        assertEquals("+4915108154711", formResult.getPerson().getMobilePhone());
+    }
+
+    @Test
+    @DisplayName("update kir tracing form: no srp session ⇒ 💾 nothing + 🔙 error")
+    void updateKirTracingForm_NoSrpSession() throws Exception {
+
+        UUID cat = UUID.randomUUID();
+        IncomingKirConnection incomingKirConnection = IncomingKirConnection.of(cat.toString());
+        UUID dat = incomingKirConnection.getId().toUuid();
+        incomingConnections.save(incomingKirConnection);
+
+        KirTracingForm form = kirTracingForms.save(KirTracingForm.builder()
+
+                .person(KirTracingForm.Person.builder()
+                        .mobilePhone("+4915147110815")
+                        .build())
+                .build());
+
+        final SRP6JavaClientSessionSHA256 client = new SRP6JavaClientSessionSHA256(
+                srpParamsConfig.getNBase10(), srpParamsConfig.getGBase10());
+
+        final String salt = client
+                .generateRandomSalt(SRP6JavascriptServerSessionSHA256.HASH_BYTE_LENGTH);
+
+        final HexHashedVerifierGenerator generator = new HexHashedVerifierGenerator(
+                srpParamsConfig.getNBase10(), srpParamsConfig.getGBase10(), SRP6JavascriptServerSessionSHA256.SHA_256);
+
+        final String verifier = generator.generateVerifier(salt, form.getAccessToken(), "Iris$Frankfurt2022!");
+
+        SRP6JavascriptServerSession srpValidator = new SRP6JavascriptServerSessionSHA256(
+                srpParamsConfig.getNBase10(), srpParamsConfig.getGBase10());
+
+        String serverChallenge = srpValidator.step1(form.getAccessToken(), salt, verifier);
+
+        form.setSrpSalt(salt);
+        form.setSrpVerifier(verifier);
+        kirTracingForms.save(form);
+
+        client.step1(form.getAccessToken(), "Iris$Frankfurt2022!");
+
+        SRP6ClientCredentials credentials = client.step2(form.getSrpSalt(), serverChallenge);
+
+        String M2 = srpValidator.step2(toHex(credentials.A), toHex(credentials.M1));
+
+        var response = given()
+                .body(String.format(VALID_FORM_UPDATE_REQUEST, dat, credentials.A, credentials.M1, form.getAccessToken()))
+
+                .when()
+                .post("/data-submission-rpc")
+
+                .then()
+                .status(BAD_REQUEST)
+                .body("error.message", containsString("No session"));
+    }
+
+    @Test
+    @DisplayName("update kir tracing form: invalid password ⇒ 💾 nothing + 🔙 error")
+    void updateKirTracingForm_InvalidPassword() throws SRP6Exception {
+
+        UUID cat = UUID.randomUUID();
+        IncomingKirConnection incomingKirConnection = IncomingKirConnection.of(cat.toString());
+        UUID dat = incomingKirConnection.getId().toUuid();
+        incomingConnections.save(incomingKirConnection);
+
+        KirTracingForm form = kirTracingForms.save(KirTracingForm.builder()
+
+                .person(KirTracingForm.Person.builder()
+                        .mobilePhone("+4915147110815")
+                        .build())
+                .build());
+
+        final SRP6JavaClientSessionSHA256 client = new SRP6JavaClientSessionSHA256(
+                srpParamsConfig.getNBase10(), srpParamsConfig.getGBase10());
+
+        final String salt = client
+                .generateRandomSalt(SRP6JavascriptServerSessionSHA256.HASH_BYTE_LENGTH);
+
+        final HexHashedVerifierGenerator generator = new HexHashedVerifierGenerator(
+                srpParamsConfig.getNBase10(), srpParamsConfig.getGBase10(), SRP6JavascriptServerSessionSHA256.SHA_256);
+
+        final String verifier = generator.generateVerifier(salt, form.getAccessToken(), "Iris$Frankfurt2022!");
+
+        SRP6JavascriptServerSession srpValidator = new SRP6JavascriptServerSessionSHA256(
+                srpParamsConfig.getNBase10(), srpParamsConfig.getGBase10());
+
+        String serverChallenge = srpValidator.step1(form.getAccessToken(), salt, verifier);
+
+        form.setSrpSession(srpValidator);
+        form.setSrpSalt(salt);
+        form.setSrpVerifier(verifier);
+        kirTracingForms.save(form);
+
+        var formsCount = kirTracingForms.count();
+
+        client.step1(form.getAccessToken(), "WrongPassword!");
+
+        SRP6ClientCredentials credentials = client.step2(form.getSrpSalt(), serverChallenge);
+
+        var response = given()
+                .body(String.format(VALID_FORM_UPDATE_REQUEST, dat, credentials.A, credentials.M1, form.getAccessToken()))
 
                 .when()
                 .post("/data-submission-rpc")
@@ -288,16 +503,14 @@ class KirTracingControllerIntegrationTest {
         incomingConnections.save(incomingKirConnection);
 
         KirTracingForm form = kirTracingForms.save(KirTracingForm.builder()
-                .password(passwordEncoder.encode("Iris$Frankfurt2022!"))
                 .person(KirTracingForm.Person.builder()
                         .mobilePhone("+4915147110815")
                         .build())
                 .build());
 
-        var formsCount = kirTracingForms.count();
 
-        var response = given()
-                .body(String.format(VALID_FORM_UPDATE_REQUEST, dat, "Iris$Frankfurt2022!", RandomStringUtils.randomAlphanumeric(10).toUpperCase()))
+        given()
+                .body(String.format(VALID_FORM_UPDATE_REQUEST, dat, 1, 1, RandomStringUtils.randomAlphanumeric(10).toUpperCase()))
 
                 .when()
                 .post("/data-submission-rpc")
