@@ -52,7 +52,7 @@ import static org.springframework.http.HttpStatus.OK;
 @Tag("kir-tracing")
 @Tag("json-rpc-controller")
 @DisplayName("IT of JSON-RPC controller for kir tracing")
-class KirTracingControllerIntegrationTest {
+class KirTracingEpsTest {
 
     final private SrpParamsConfig srpParamsConfig;
 
@@ -113,8 +113,6 @@ class KirTracingControllerIntegrationTest {
                 .status(OK)
                 .extract()
                 .jsonPath();
-
-        System.out.println(response.toString());
 
         var hdKeyBase64 = response.getString("result.hdPublicKey");
         var ivBase64 = response.getString("result.iv");
@@ -184,10 +182,7 @@ class KirTracingControllerIntegrationTest {
     @DisplayName("generate kir access token for form: valid dat ⇒ 💾 kir tracing form + 🔙 access token")
     void generateKirAccessToken_ValidRequest() {
 
-        UUID cat = UUID.randomUUID();
-        IncomingKirConnection incomingKirConnection = IncomingKirConnection.of(cat.toString());
-        UUID dat = incomingKirConnection.getId().toUuid();
-        incomingConnections.save(incomingKirConnection);
+        UUID dat = getConnectionUuid();
 
         var formsCount = kirTracingForms.count();
 
@@ -218,10 +213,7 @@ class KirTracingControllerIntegrationTest {
     @DisplayName("submit kir tracing form: valid dat ⇒ 💾 kirtracingform + 🔙 auth token")
     void submitKirTracingForm_ValidRequest() {
 
-        UUID cat = UUID.randomUUID();
-        IncomingKirConnection incomingKirConnection = IncomingKirConnection.of(cat.toString());
-        UUID dat = incomingKirConnection.getId().toUuid();
-        incomingConnections.save(incomingKirConnection);
+        UUID dat = getConnectionUuid();
 
         var formsCount = kirTracingForms.count();
 
@@ -269,10 +261,7 @@ class KirTracingControllerIntegrationTest {
     @DisplayName("challenge kir: valid dat and access token ⇒ 💾 session + 🔙 challenge")
     void challengeKir_ValidRequest() {
 
-        UUID cat = UUID.randomUUID();
-        IncomingKirConnection incomingKirConnection = IncomingKirConnection.of(cat.toString());
-        UUID dat = incomingKirConnection.getId().toUuid();
-        incomingConnections.save(incomingKirConnection);
+        UUID dat = getConnectionUuid();
 
         var formsCount = kirTracingForms.count();
 
@@ -324,10 +313,7 @@ class KirTracingControllerIntegrationTest {
     @DisplayName("update kir tracing form: valid request ⇒ 💾 kirtracingform + 🔙 auth token")
     void updateKirTracingForm_ValidRequest() throws Exception {
 
-        UUID cat = UUID.randomUUID();
-        IncomingKirConnection incomingKirConnection = IncomingKirConnection.of(cat.toString());
-        UUID dat = incomingKirConnection.getId().toUuid();
-        incomingConnections.save(incomingKirConnection);
+        UUID dat = getConnectionUuid();
 
         KirTracingForm form = kirTracingForms.save(KirTracingForm.builder()
 
@@ -389,10 +375,7 @@ class KirTracingControllerIntegrationTest {
     @DisplayName("update kir tracing form: no srp session ⇒ 💾 nothing + 🔙 error")
     void updateKirTracingForm_NoSrpSession() throws Exception {
 
-        UUID cat = UUID.randomUUID();
-        IncomingKirConnection incomingKirConnection = IncomingKirConnection.of(cat.toString());
-        UUID dat = incomingKirConnection.getId().toUuid();
-        incomingConnections.save(incomingKirConnection);
+        UUID dat = getConnectionUuid();
 
         KirTracingForm form = kirTracingForms.save(KirTracingForm.builder()
 
@@ -442,10 +425,7 @@ class KirTracingControllerIntegrationTest {
     @DisplayName("update kir tracing form: invalid password ⇒ 💾 nothing + 🔙 error")
     void updateKirTracingForm_InvalidPassword() throws SRP6Exception {
 
-        UUID cat = UUID.randomUUID();
-        IncomingKirConnection incomingKirConnection = IncomingKirConnection.of(cat.toString());
-        UUID dat = incomingKirConnection.getId().toUuid();
-        incomingConnections.save(incomingKirConnection);
+        UUID dat = getConnectionUuid();
 
         KirTracingForm form = kirTracingForms.save(KirTracingForm.builder()
 
@@ -497,10 +477,7 @@ class KirTracingControllerIntegrationTest {
     @DisplayName("update kir tracing form: invalid auth token ⇒ 💾 nothing + 🔙 error")
     void updateKirTracingForm_InvalidaccessToken() {
 
-        UUID cat = UUID.randomUUID();
-        IncomingKirConnection incomingKirConnection = IncomingKirConnection.of(cat.toString());
-        UUID dat = incomingKirConnection.getId().toUuid();
-        incomingConnections.save(incomingKirConnection);
+        UUID dat = getConnectionUuid();
 
         KirTracingForm form = kirTracingForms.save(KirTracingForm.builder()
                 .person(KirTracingForm.Person.builder()
@@ -519,6 +496,14 @@ class KirTracingControllerIntegrationTest {
                 .status(BAD_REQUEST)
                 .body("error.message", containsString("Invalid credentials"));
 
+    }
+
+    private UUID getConnectionUuid() {
+        UUID cat = UUID.randomUUID();
+        IncomingKirConnection incomingKirConnection = IncomingKirConnection.of(cat.toString());
+        UUID dat = incomingKirConnection.getId().toUuid();
+        incomingConnections.save(incomingKirConnection);
+        return dat;
     }
 
     private String decrypt(PrivateKey privateKey, String hdKeyBase64, String ivBase64, String tokensBase64)

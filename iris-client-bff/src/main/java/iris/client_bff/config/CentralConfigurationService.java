@@ -78,7 +78,7 @@ public class CentralConfigurationService {
 
 			var proxyUrl = getProxyUrl();
 
-			if (!StringUtils.equals(proxyUrl, proxyProperties.getTargetSubdomain())) {
+			if (!StringUtils.equals(proxyUrl, proxyProperties.getTargetSubdomain()) && !ignoreConnectionErrors) {
 
 				alerts.createAlertTicketAndMessage("Configuration mismatch of proxy target subdomain", String.format(
 						"""

@@ -1,5 +1,8 @@
 package iris.client_bff.kir_tracing.web;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import io.restassured.module.mockmvc.RestAssuredMockMvc;
 import iris.client_bff.IrisWebIntegrationTest;
 import iris.client_bff.WithMockIrisUser;
@@ -45,11 +48,17 @@ class KirTracingControllerTest {
     @DisplayName("getKirTracingForms: without search string ⇒ 🔙 all results")
     void getKirTracingForms_AllResults() {
 
+        String assessmentJson = """
+        {"form":{"key":"value"}}
+        """;
+
+
         KirTracingForm form = KirTracingForm.builder()
                 .srpSalt("TestpassUnencrypted")
                 .srpVerifier("Testverifier")
                 .accessToken(RandomStringUtils.randomAlphanumeric(10)
                         .toUpperCase())
+                .assessment(assessmentJson.trim())
                 .person(KirTracingForm.Person.builder()
                         .mobilePhone("+4915141800093")
                         .build())
@@ -65,14 +74,11 @@ class KirTracingControllerTest {
                 .status(OK);
 
         var result = when()
-                .get(path, "TestpassUnencrypted")
+                .get(path, "15141800093")
                 .then()
-                .body("numberOfElements", is(1), getCommonChecks())
-                .extract()
-                .jsonPath();
+                .body("numberOfElements", is(1), getCommonChecks()).extract();
 
-        System.out.println(result.get()
-                .toString());
+        System.out.println(result.body().asString());
     }
 
     private Object[] getCommonChecks() {

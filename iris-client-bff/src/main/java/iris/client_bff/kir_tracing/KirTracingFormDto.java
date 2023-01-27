@@ -1,5 +1,6 @@
 package iris.client_bff.kir_tracing;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import iris.client_bff.core.serialization.DefuseJsonString;
 import iris.client_bff.core.validation.AttackDetector;
 import lombok.Data;
@@ -20,6 +21,10 @@ public class KirTracingFormDto {
     private String status;
 
     private String targetDisease;
+
+    private JsonNode assessment;
+
+    private String therapyResults;
 
     @Data
     @Validated

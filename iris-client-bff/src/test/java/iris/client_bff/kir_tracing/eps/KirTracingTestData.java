@@ -79,7 +79,13 @@ public interface KirTracingTestData {
 			"form":{
 				"person": {
 					"mobilePhone":"+4915147110815"
+				},
+				"assessment": {
+					"form": {
+						"key":"value"
+					}
 				}
+				
 			}
 			""");
 

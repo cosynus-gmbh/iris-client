@@ -23,7 +23,7 @@ class SrpTest {
 
     final private SrpParamsConfig config;
 
-    final static String username = "tom@arcot.com";
+    final static String username = "testuser";
     final static String password = "password1234";
 
 

@@ -45,7 +45,7 @@ import static com.nimbusds.srp6.BigIntegerUtils.toHex;
 @Slf4j
 public class KirTracingService {
 
-    private static final String[] FIELDS = {"password"};
+    private static final String[] FIELDS = {"person.mobilePhone"};
 
     private final ProxyServiceClient proxyClient;
     private final IncomingKirConnectionRepository incomingConnections;
@@ -146,6 +146,8 @@ public class KirTracingService {
         targetForm.setSrpSalt(srpSalt);
         targetForm.setSrpVerifier(srpVerifier);
 
+        log.info(targetForm.toString());
+
         tracingForms.save(targetForm);
 
         return new KirFormSubmissionResultDto(targetForm.getAccessToken());
@@ -185,7 +187,9 @@ public class KirTracingService {
     }
 
     public Page<KirTracingForm> getAll(Pageable pageable) {
+
         return tracingForms.findAll(pageable);
+
     }
 
     public KirFormSubmissionResultDto generateAccessToken() {

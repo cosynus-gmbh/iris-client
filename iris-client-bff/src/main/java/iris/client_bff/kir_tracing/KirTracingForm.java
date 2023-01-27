@@ -49,6 +49,10 @@ public class KirTracingForm extends Aggregate<KirTracingForm, KirTracingForm.Kir
     @IndexedEmbedded
     private Person person;
 
+    private String assessment;
+
+    private String therapyResults;
+
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     @GenericField(sortable = Sortable.YES)

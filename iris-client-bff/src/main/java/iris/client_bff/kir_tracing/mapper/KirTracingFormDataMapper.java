@@ -1,5 +1,8 @@
 package iris.client_bff.kir_tracing.mapper;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import iris.client_bff.config.MapStructCentralConfig;
 
 import iris.client_bff.kir_tracing.KirTracingForm;
@@ -11,6 +14,8 @@ import java.util.UUID;
 @Mapper(config = MapStructCentralConfig.class, imports = UUID.class)
 public interface KirTracingFormDataMapper {
 
+
+
     KirTracingForm toEntity(KirTracingFormDto formDto);
 
     KirTracingForm.Person toEntity(KirTracingFormDto.PersonDto personDto);
@@ -19,6 +24,19 @@ public interface KirTracingFormDataMapper {
     @Mapping(source= "targetDisease", target="targetDisease",
             nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.SET_TO_DEFAULT)
     KirTracingFormDto toDto(KirTracingForm form);
+
+    default JsonNode map(String jsonString) {
+        ObjectMapper objectMapper = new ObjectMapper();
+        try {
+            return objectMapper.readValue(jsonString, JsonNode.class);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    default String map(JsonNode json) {
+      return json.toString();
+    }
 
     @BeanMapping(nullValuePropertyMappingStrategy =  NullValuePropertyMappingStrategy.IGNORE)
     KirTracingForm update(@MappingTarget KirTracingForm entity, KirTracingFormDto updateEntity);
