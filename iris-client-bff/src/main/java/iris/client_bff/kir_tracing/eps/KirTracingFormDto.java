@@ -1,8 +1,10 @@
-package iris.client_bff.kir_tracing;
+package iris.client_bff.kir_tracing.eps;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import iris.client_bff.core.serialization.DefuseJsonString;
 import iris.client_bff.core.validation.AttackDetector;
+import iris.client_bff.core.validation.NoSignOfAttack;
+import iris.client_bff.core.validation.NoSignOfAttackJsonNode;
 import lombok.Data;
 import lombok.ToString;
 import org.springframework.validation.annotation.Validated;
@@ -22,9 +24,11 @@ public class KirTracingFormDto {
 
     private String targetDisease;
 
+    @NoSignOfAttackJsonNode
     private JsonNode assessment;
 
-    private String therapyResults;
+    @NoSignOfAttackJsonNode
+    private JsonNode therapyResults;
 
     @Data
     @Validated

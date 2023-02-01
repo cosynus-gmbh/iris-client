@@ -11,6 +11,7 @@ import iris.client_bff.kir_tracing.eps.KirChallengeDto;
 import iris.client_bff.kir_tracing.eps.KirTracingController.KirConnectionDto;
 import iris.client_bff.kir_tracing.eps.KirTracingController.KirConnectionResultDto;
 import iris.client_bff.kir_tracing.eps.KirTracingController.KirFormSubmissionResultDto;
+import iris.client_bff.kir_tracing.eps.KirTracingFormDto;
 import iris.client_bff.kir_tracing.mapper.KirTracingFormDataMapper;
 import iris.client_bff.proxy.IRISAnnouncementException;
 import iris.client_bff.proxy.ProxyServiceClient;

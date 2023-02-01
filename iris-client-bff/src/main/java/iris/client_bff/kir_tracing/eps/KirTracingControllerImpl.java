@@ -1,7 +1,6 @@
 package iris.client_bff.kir_tracing.eps;
 
 import com.nimbusds.srp6.SRP6ClientCredentials;
-import iris.client_bff.kir_tracing.KirTracingFormDto;
 import iris.client_bff.kir_tracing.KirTracingService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

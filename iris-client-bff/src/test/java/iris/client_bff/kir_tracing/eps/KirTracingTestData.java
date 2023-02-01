@@ -104,6 +104,20 @@ public interface KirTracingTestData {
 			"m1": "%s",
 			"accessToken":"%s",
 			"form":{
+				"therapyResults": {
+					"form": {
+						"key":"value"
+					}
+				}			
+			}
+			""");
+
+	String VALID_FORM_UPDATE_THERAPY_REQUEST = String.format(JSON_RPC_UPDATE_REQUEST, """
+			"dataAuthorizationToken":"%s",
+			"a": "%s",
+			"m1": "%s",
+			"accessToken":"%s",
+			"form":{
 			"person": {
 					"mobilePhone":"+4915108154711"
 				}

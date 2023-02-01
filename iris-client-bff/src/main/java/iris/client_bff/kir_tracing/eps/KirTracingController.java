@@ -5,7 +5,6 @@ import com.googlecode.jsonrpc4j.JsonRpcErrors;
 import com.googlecode.jsonrpc4j.JsonRpcParam;
 import iris.client_bff.core.validation.Base64;
 import iris.client_bff.core.validation.NoSignOfAttack;
-import iris.client_bff.kir_tracing.KirTracingFormDto;
 import iris.client_bff.vaccination_info.VaccinationInfoAnnouncementException;
 import iris.client_bff.vaccination_info.eps.InvalidPublicKeyException;
 import org.springframework.validation.annotation.Validated;

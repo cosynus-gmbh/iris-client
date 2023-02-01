@@ -325,23 +325,7 @@ class KirTracingEpsTest {
         final SRP6JavaClientSessionSHA256 client = new SRP6JavaClientSessionSHA256(
                 srpParamsConfig.getNBase10(), srpParamsConfig.getGBase10());
 
-        final String salt = client
-                .generateRandomSalt(SRP6JavascriptServerSessionSHA256.HASH_BYTE_LENGTH);
-
-        final HexHashedVerifierGenerator generator = new HexHashedVerifierGenerator(
-                srpParamsConfig.getNBase10(), srpParamsConfig.getGBase10(), SRP6JavascriptServerSessionSHA256.SHA_256);
-
-        final String verifier = generator.generateVerifier(salt, form.getAccessToken(), "Iris$Frankfurt2022!");
-
-        SRP6JavascriptServerSession srpValidator = new SRP6JavascriptServerSessionSHA256(
-                srpParamsConfig.getNBase10(), srpParamsConfig.getGBase10());
-
-        String serverChallenge = srpValidator.step1(form.getAccessToken(), salt, verifier);
-
-        form.setSrpSession(srpValidator);
-        form.setSrpSalt(salt);
-        form.setSrpVerifier(verifier);
-        kirTracingForms.save(form);
+        String serverChallenge = getServerChallenge(form, client);
 
         var formsCount = kirTracingForms.count();
 
@@ -372,6 +356,73 @@ class KirTracingEpsTest {
     }
 
     @Test
+    @DisplayName("update kir tracing form: valid request ⇒ 💾 kirtracingform + 🔙 auth token")
+    void updateKirTracingFormWithTherapyEnd_ValidRequest() throws Exception {
+
+        UUID dat = getConnectionUuid();
+
+        KirTracingForm form = kirTracingForms.save(KirTracingForm.builder()
+
+                .person(KirTracingForm.Person.builder()
+                        .mobilePhone("+4915147110815")
+                        .build())
+                .build());
+
+        final SRP6JavaClientSessionSHA256 client = new SRP6JavaClientSessionSHA256(
+                srpParamsConfig.getNBase10(), srpParamsConfig.getGBase10());
+
+        String serverChallenge = getServerChallenge(form, client);
+
+        var formsCount = kirTracingForms.count();
+
+        client.step1(form.getAccessToken(), "Iris$Frankfurt2022!");
+
+        SRP6ClientCredentials credentials = client.step2(form.getSrpSalt(), serverChallenge);
+
+        var response = given()
+                .body(String.format(VALID_FORM_UPDATE_REQUEST, dat, credentials.A, credentials.M1, form.getAccessToken()))
+
+                .when()
+                .post("/data-submission-rpc")
+
+                .then()
+                .status(OK)
+                .extract()
+                .jsonPath();
+
+        var accessToken = response.getString("result.accessToken");
+
+        KirTracingForm formResult = kirTracingForms.findByAccessToken(accessToken).get();
+
+        assertThat(accessToken).isNotBlank().hasSize(10);
+        assertEquals(accessToken, formResult.getAccessToken());
+        assertEquals(formsCount, kirTracingForms.count());
+        assertEquals(null, formResult.getSrpSession());
+        assertNotNull(formResult.getTherapyResults());
+    }
+
+    private String getServerChallenge(KirTracingForm form, SRP6JavaClientSessionSHA256 client) {
+        final String salt = client
+                .generateRandomSalt(SRP6JavascriptServerSessionSHA256.HASH_BYTE_LENGTH);
+
+        final HexHashedVerifierGenerator generator = new HexHashedVerifierGenerator(
+                srpParamsConfig.getNBase10(), srpParamsConfig.getGBase10(), SRP6JavascriptServerSessionSHA256.SHA_256);
+
+        final String verifier = generator.generateVerifier(salt, form.getAccessToken(), "Iris$Frankfurt2022!");
+
+        SRP6JavascriptServerSession srpValidator = new SRP6JavascriptServerSessionSHA256(
+                srpParamsConfig.getNBase10(), srpParamsConfig.getGBase10());
+
+        String serverChallenge = srpValidator.step1(form.getAccessToken(), salt, verifier);
+
+        form.setSrpSession(srpValidator);
+        form.setSrpSalt(salt);
+        form.setSrpVerifier(verifier);
+        kirTracingForms.save(form);
+        return serverChallenge;
+    }
+
+    @Test
     @DisplayName("update kir tracing form: no srp session ⇒ 💾 nothing + 🔙 error")
     void updateKirTracingForm_NoSrpSession() throws Exception {
 
@@ -387,26 +438,14 @@ class KirTracingEpsTest {
         final SRP6JavaClientSessionSHA256 client = new SRP6JavaClientSessionSHA256(
                 srpParamsConfig.getNBase10(), srpParamsConfig.getGBase10());
 
-        final String salt = client
-                .generateRandomSalt(SRP6JavascriptServerSessionSHA256.HASH_BYTE_LENGTH);
-
-        final HexHashedVerifierGenerator generator = new HexHashedVerifierGenerator(
-                srpParamsConfig.getNBase10(), srpParamsConfig.getGBase10(), SRP6JavascriptServerSessionSHA256.SHA_256);
-
-        final String verifier = generator.generateVerifier(salt, form.getAccessToken(), "Iris$Frankfurt2022!");
-
-        SRP6JavascriptServerSession srpValidator = new SRP6JavascriptServerSessionSHA256(
-                srpParamsConfig.getNBase10(), srpParamsConfig.getGBase10());
-
-        String serverChallenge = srpValidator.step1(form.getAccessToken(), salt, verifier);
-
-        form.setSrpSalt(salt);
-        form.setSrpVerifier(verifier);
-        kirTracingForms.save(form);
+        String serverChallenge = getServerChallenge(form, client);
 
         client.step1(form.getAccessToken(), "Iris$Frankfurt2022!");
 
         SRP6ClientCredentials credentials = client.step2(form.getSrpSalt(), serverChallenge);
+
+        SRP6JavascriptServerSession srpValidator = new SRP6JavascriptServerSessionSHA256(
+                srpParamsConfig.getNBase10(), srpParamsConfig.getGBase10());
 
         String M2 = srpValidator.step2(toHex(credentials.A), toHex(credentials.M1));
 
@@ -437,23 +476,7 @@ class KirTracingEpsTest {
         final SRP6JavaClientSessionSHA256 client = new SRP6JavaClientSessionSHA256(
                 srpParamsConfig.getNBase10(), srpParamsConfig.getGBase10());
 
-        final String salt = client
-                .generateRandomSalt(SRP6JavascriptServerSessionSHA256.HASH_BYTE_LENGTH);
-
-        final HexHashedVerifierGenerator generator = new HexHashedVerifierGenerator(
-                srpParamsConfig.getNBase10(), srpParamsConfig.getGBase10(), SRP6JavascriptServerSessionSHA256.SHA_256);
-
-        final String verifier = generator.generateVerifier(salt, form.getAccessToken(), "Iris$Frankfurt2022!");
-
-        SRP6JavascriptServerSession srpValidator = new SRP6JavascriptServerSessionSHA256(
-                srpParamsConfig.getNBase10(), srpParamsConfig.getGBase10());
-
-        String serverChallenge = srpValidator.step1(form.getAccessToken(), salt, verifier);
-
-        form.setSrpSession(srpValidator);
-        form.setSrpSalt(salt);
-        form.setSrpVerifier(verifier);
-        kirTracingForms.save(form);
+        String serverChallenge = getServerChallenge(form, client);
 
         var formsCount = kirTracingForms.count();
 

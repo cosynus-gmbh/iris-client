@@ -1,36 +1,17 @@
 package iris.client_bff.kir_tracing.web;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import iris.client_bff.config.MapStructCentralConfig;
 import iris.client_bff.core.validation.NoSignOfAttack;
-import iris.client_bff.kir_tracing.KirTracingForm;
-import iris.client_bff.kir_tracing.KirTracingFormDto;
+import iris.client_bff.kir_tracing.eps.KirTracingFormDto;
 import iris.client_bff.kir_tracing.KirTracingService;
-import iris.client_bff.kir_tracing.eps.KirTracingController.KirConnectionDto;
 import iris.client_bff.kir_tracing.mapper.KirTracingFormDataMapper;
-import iris.client_bff.vaccination_info.EncryptedConnectionsService;
-import iris.client_bff.vaccination_info.VaccinationInfo;
-import iris.client_bff.vaccination_info.VaccinationInfo.Employee;
-import iris.client_bff.vaccination_info.VaccinationInfo.VaccinationInfoIdentifier;
-import iris.client_bff.vaccination_info.VaccinationInfoService;
-import iris.client_bff.vaccination_info.VaccinationStatus;
-import iris.client_bff.vaccination_info.web.VaccinationInfoDto;
 import lombok.RequiredArgsConstructor;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 
-import java.security.GeneralSecurityException;
-import java.util.Map;
 import java.util.Optional;
 
 @RestController

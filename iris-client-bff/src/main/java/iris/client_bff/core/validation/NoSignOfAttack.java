@@ -3,6 +3,7 @@ package iris.client_bff.core.validation;
 import static java.lang.annotation.ElementType.*;
 import static java.lang.annotation.RetentionPolicy.*;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import iris.client_bff.core.validation.AttackDetector.MessageDataPayload;
 import iris.client_bff.core.validation.AttackDetector.Password;
 import iris.client_bff.core.validation.AttackDetector.Phone;

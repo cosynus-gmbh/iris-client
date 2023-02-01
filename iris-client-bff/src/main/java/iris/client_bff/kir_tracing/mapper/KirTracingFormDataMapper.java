@@ -6,7 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import iris.client_bff.config.MapStructCentralConfig;
 
 import iris.client_bff.kir_tracing.KirTracingForm;
-import iris.client_bff.kir_tracing.KirTracingFormDto;
+import iris.client_bff.kir_tracing.eps.KirTracingFormDto;
 import org.mapstruct.*;
 
 import java.util.UUID;
