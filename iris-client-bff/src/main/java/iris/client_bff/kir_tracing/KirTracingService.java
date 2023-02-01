@@ -219,6 +219,7 @@ public class KirTracingService {
 
         return KirChallengeDto.builder()
                 .challenge(challenge)
+                .salt(form.getSrpSalt())
                 .build();
     }
 

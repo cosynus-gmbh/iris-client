@@ -9,4 +9,5 @@ import lombok.ToString;
 @Builder
 public class KirChallengeDto {
     private String challenge;
+    private String salt;
 }
