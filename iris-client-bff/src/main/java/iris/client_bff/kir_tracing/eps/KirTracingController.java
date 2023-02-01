@@ -46,8 +46,8 @@ public interface KirTracingController {
 
 	KirFormSubmissionResultDto updateKirTracingForm(
 			@JsonRpcParam(value = "dataAuthorizationToken") @NotNull UUID dataAuthorizationToken,
-			@JsonRpcParam(value = "a") @NotNull BigInteger a,
-			@JsonRpcParam(value = "m1") @NotNull BigInteger m1,
+			@JsonRpcParam(value = "a") @NotNull String a,
+			@JsonRpcParam(value = "m1") @NotNull String m1,
 			@JsonRpcParam(value = "accessToken") @NotNull @NoSignOfAttack String accessToken,
 			@JsonRpcParam(value = "form") @NotNull @Valid KirTracingFormDto form
 	);

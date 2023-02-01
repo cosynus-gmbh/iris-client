@@ -76,7 +76,7 @@ public class KirTracingControllerImpl implements KirTracingController {
     }
 
     @Override
-    public KirFormSubmissionResultDto updateKirTracingForm(UUID dataAuthorizationToken, BigInteger a, BigInteger m1, String accessToken, KirTracingFormDto formDto) {
+    public KirFormSubmissionResultDto updateKirTracingForm(UUID dataAuthorizationToken, String a, String m1, String accessToken, KirTracingFormDto formDto) {
 
         log.debug("Start updating KIR form (JSON-RPC interface)");
 
@@ -84,7 +84,7 @@ public class KirTracingControllerImpl implements KirTracingController {
             throw new IllegalArgumentException("Unknown dataAuthorizationToken: " + dataAuthorizationToken);
         }
 
-        SRP6ClientCredentials credentials = new SRP6ClientCredentials(a, m1);
+        SRP6ClientCredentials credentials = new SRP6ClientCredentials(new BigInteger(a, 16), new BigInteger(m1, 16));
 
         var result = service.updateKirTracingForm(credentials, accessToken, formDto);
 
