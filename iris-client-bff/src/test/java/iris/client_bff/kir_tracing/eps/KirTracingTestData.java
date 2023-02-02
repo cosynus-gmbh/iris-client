@@ -57,7 +57,7 @@ public interface KirTracingTestData {
 			{
 			    "id":"1",
 			    "jsonrpc":"2.0",
-			    "method":"updateKirTracingForm",
+			    "method":"submitKirTherapyResults",
 			    "params":{
 			    		"_client":{"name":"hd-1"},
 			    		%s

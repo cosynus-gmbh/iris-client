@@ -3,13 +3,11 @@ package iris.client_bff.kir_tracing.eps;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.nimbusds.srp6.BigIntegerUtils;
 import com.nimbusds.srp6.SRP6ClientCredentials;
-import iris.client_bff.core.validation.NoSignOfAttack;
 import iris.client_bff.kir_tracing.KirTracingService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import javax.validation.constraints.NotNull;
 import java.util.UUID;
 
 @Service
@@ -79,7 +77,7 @@ public class KirTracingControllerImpl implements KirTracingController {
     }
 
     @Override
-    public KirFormSubmissionResultDto submitTherapyResults(UUID dataAuthorizationToken, String a, String m1, String accessToken, JsonNode formDto) {
+    public KirFormSubmissionResultDto submitKirTherapyResults(UUID dataAuthorizationToken, String a, String m1, String accessToken, JsonNode formDto) {
 
         log.debug("Start updating KIR form (JSON-RPC interface)");
 
@@ -97,8 +95,7 @@ public class KirTracingControllerImpl implements KirTracingController {
     }
 
     @Override
-    public KirAuthorizationResponseDto authorizeKir(UUID dataAuthorizationToken, String a, String m1, @NotNull @NoSignOfAttack String accessToken
-    ) {
+    public KirAuthorizationResponseDto authorizeKir(UUID dataAuthorizationToken, String a, String m1, String accessToken) {
         log.debug("Start updating KIR form (JSON-RPC interface)");
 
         if (!service.validateConnection(dataAuthorizationToken)) {

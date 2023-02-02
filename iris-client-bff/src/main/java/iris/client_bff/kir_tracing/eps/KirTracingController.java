@@ -6,6 +6,7 @@ import com.googlecode.jsonrpc4j.JsonRpcErrors;
 import com.googlecode.jsonrpc4j.JsonRpcParam;
 import iris.client_bff.core.validation.Base64;
 import iris.client_bff.core.validation.NoSignOfAttack;
+import iris.client_bff.core.validation.NoSignOfAttackJsonNode;
 import iris.client_bff.vaccination_info.VaccinationInfoAnnouncementException;
 import iris.client_bff.vaccination_info.eps.InvalidPublicKeyException;
 import org.springframework.validation.annotation.Validated;
@@ -52,12 +53,12 @@ public interface KirTracingController {
             @JsonRpcParam(value = "accessToken") @NotNull @NoSignOfAttack String accessToken
     );
 
-    KirFormSubmissionResultDto submitTherapyResults(
+    KirFormSubmissionResultDto submitKirTherapyResults(
             @JsonRpcParam(value = "dataAuthorizationToken") @NotNull UUID dataAuthorizationToken,
             @JsonRpcParam(value = "a") @NotNull String a,
             @JsonRpcParam(value = "m1") @NotNull String m1,
             @JsonRpcParam(value = "accessToken") @NotNull @NoSignOfAttack String accessToken,
-            @JsonRpcParam(value = "form") @NoSignOfAttack @NotNull @Valid JsonNode therapyResults
+            @JsonRpcParam(value = "form") @NoSignOfAttackJsonNode @NotNull @Valid JsonNode therapyResults
     );
 
 
