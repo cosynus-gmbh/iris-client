@@ -1,22 +1,17 @@
 package iris.client_bff.kir_tracing;
 
-import com.bitbucket.thinbus.srp6.js.SRP6JavascriptServerSession;
-import com.bitbucket.thinbus.srp6.js.SRP6JavascriptServerSessionSHA256;
 import com.nimbusds.srp6.SRP6ServerSession;
-import iris.client_bff.core.model.Address;
 import iris.client_bff.core.model.Aggregate;
 import iris.client_bff.core.model.IdWithUuid;
-import iris.client_bff.vaccination_info.VaccinationInfo;
 import lombok.*;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.hibernate.search.engine.backend.types.Sortable;
-import org.hibernate.search.mapper.pojo.mapping.definition.annotation.FullTextField;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.GenericField;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.Indexed;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.IndexedEmbedded;
 
 import javax.persistence.*;
-import java.io.IOException;
 import java.util.UUID;
 
 /**
@@ -29,6 +24,7 @@ import java.util.UUID;
 @ToString
 @Indexed
 @AllArgsConstructor
+@Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class KirTracingForm extends Aggregate<KirTracingForm, KirTracingForm.KirTracingFormIdentifier> {
 
@@ -44,7 +40,8 @@ public class KirTracingForm extends Aggregate<KirTracingForm, KirTracingForm.Kir
 
     @Builder.Default
     @Column(unique = true)
-    private String accessToken = RandomStringUtils.randomAlphanumeric(10).toUpperCase();
+    private String accessToken = RandomStringUtils.randomAlphanumeric(10)
+            .toUpperCase();
 
     @IndexedEmbedded
     private Person person;
@@ -85,15 +82,16 @@ public class KirTracingForm extends Aggregate<KirTracingForm, KirTracingForm.Kir
     }
 
     @SneakyThrows
-    public void setSrpSession(SRP6JavascriptServerSession session) {
+    public void setSrpSession(SRP6ServerSession session) {
         this.srpSession = ObjectSerializationHelper.toString(session);
     }
 
-    public SRP6JavascriptServerSessionSHA256 getSrpSession() {
+    public SRP6ServerSession getSrpServerSession() {
+        if (this.srpSession.isBlank()) return null;
         try {
-            return (SRP6JavascriptServerSessionSHA256) ObjectSerializationHelper.fromString(this.srpSession);
+            return (SRP6ServerSession) ObjectSerializationHelper.fromString(this.srpSession);
         } catch (Exception e) {
-          return null;
+            return null;
         }
     }
 

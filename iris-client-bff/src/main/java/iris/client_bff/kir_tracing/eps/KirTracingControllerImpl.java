@@ -1,12 +1,15 @@
 package iris.client_bff.kir_tracing.eps;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.nimbusds.srp6.BigIntegerUtils;
 import com.nimbusds.srp6.SRP6ClientCredentials;
+import iris.client_bff.core.validation.NoSignOfAttack;
 import iris.client_bff.kir_tracing.KirTracingService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.math.BigInteger;
+import javax.validation.constraints.NotNull;
 import java.util.UUID;
 
 @Service
@@ -76,7 +79,7 @@ public class KirTracingControllerImpl implements KirTracingController {
     }
 
     @Override
-    public KirFormSubmissionResultDto updateKirTracingForm(UUID dataAuthorizationToken, String a, String m1, String accessToken, KirTracingFormDto formDto) {
+    public KirFormSubmissionResultDto submitTherapyResults(UUID dataAuthorizationToken, String a, String m1, String accessToken, JsonNode formDto) {
 
         log.debug("Start updating KIR form (JSON-RPC interface)");
 
@@ -84,9 +87,27 @@ public class KirTracingControllerImpl implements KirTracingController {
             throw new IllegalArgumentException("Unknown dataAuthorizationToken: " + dataAuthorizationToken);
         }
 
-        SRP6ClientCredentials credentials = new SRP6ClientCredentials(new BigInteger(a, 16), new BigInteger(m1, 16));
+        SRP6ClientCredentials credentials = new SRP6ClientCredentials(BigIntegerUtils.fromHex(a), BigIntegerUtils.fromHex(m1));
 
-        var result = service.updateKirTracingForm(credentials, accessToken, formDto);
+        var result = service.updateKirTherapyResults(credentials, accessToken, formDto);
+
+        log.trace("Finish updating KIR form (JSON-RPC interface)");
+
+        return result;
+    }
+
+    @Override
+    public KirAuthorizationResponseDto authorizeKir(UUID dataAuthorizationToken, String a, String m1, @NotNull @NoSignOfAttack String accessToken
+    ) {
+        log.debug("Start updating KIR form (JSON-RPC interface)");
+
+        if (!service.validateConnection(dataAuthorizationToken)) {
+            throw new IllegalArgumentException("Unknown dataAuthorizationToken: " + dataAuthorizationToken);
+        }
+
+        SRP6ClientCredentials credentials = new SRP6ClientCredentials(BigIntegerUtils.fromHex(a), BigIntegerUtils.fromHex(m1));
+
+        KirAuthorizationResponseDto result = service.authorizeKir(credentials, accessToken);
 
         log.trace("Finish updating KIR form (JSON-RPC interface)");
 

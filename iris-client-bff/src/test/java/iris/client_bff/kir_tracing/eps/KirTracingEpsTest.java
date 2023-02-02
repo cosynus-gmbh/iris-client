@@ -1,8 +1,6 @@
 package iris.client_bff.kir_tracing.eps;
 
-import com.bitbucket.thinbus.srp6.js.*;
-import com.nimbusds.srp6.SRP6ClientCredentials;
-import com.nimbusds.srp6.SRP6Exception;
+import com.nimbusds.srp6.*;
 import io.restassured.builder.ResponseSpecBuilder;
 import io.restassured.module.mockmvc.RestAssuredMockMvc;
 import io.restassured.module.mockmvc.specification.MockMvcRequestSpecBuilder;
@@ -25,6 +23,7 @@ import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.math.BigInteger;
 import java.security.GeneralSecurityException;
 import java.security.PrivateKey;
 import java.time.Duration;
@@ -221,19 +220,14 @@ class KirTracingEpsTest {
 
         kirTracingForms.save(initialForm);
 
-        final SRP6JavaClientSessionSHA256 client = new SRP6JavaClientSessionSHA256(
-                srpParamsConfig.getNBase10(), srpParamsConfig.getGBase10());
+        SRP6VerifierGenerator gen = new SRP6VerifierGenerator(srpParamsConfig.getConfig());
 
-        final String salt = client
-                .generateRandomSalt(SRP6JavascriptServerSessionSHA256.HASH_BYTE_LENGTH);
+        BigInteger salt = BigIntegerUtils.bigIntegerFromBytes(gen.generateRandomSalt(srpParamsConfig.getSaltByteCount()));
 
-        final HexHashedVerifierGenerator generator = new HexHashedVerifierGenerator(
-                srpParamsConfig.getNBase10(), srpParamsConfig.getGBase10(), SRP6JavascriptServerSessionSHA256.SHA_256);
-
-        final String verifier = generator.generateVerifier(salt, initialForm.getAccessToken(), "Iris$Frankfurt2022!");
+        final BigInteger verifier = gen.generateVerifier(salt, initialForm.getAccessToken(), "Iris$Frankfurt2022!");
 
         var response = given()
-                .body(String.format(VALID_FORM_SUBMISSION_REQUEST, dat, salt, verifier, initialForm.getAccessToken()))
+                .body(String.format(VALID_FORM_SUBMISSION_REQUEST, dat, salt.toString(16), verifier.toString(16), initialForm.getAccessToken()))
 
                 .when()
                 .post("/data-submission-rpc")
@@ -249,8 +243,8 @@ class KirTracingEpsTest {
 
         KirTracingForm submittedFormInDb = kirTracingForms.findByAccessToken(accessToken).get();
 
-        assertEquals(verifier, submittedFormInDb.getSrpVerifier());
-        assertEquals(salt, submittedFormInDb.getSrpSalt());
+        assertEquals(verifier.toString(16), submittedFormInDb.getSrpVerifier());
+        assertEquals(salt.toString(16), submittedFormInDb.getSrpSalt());
         assertEquals(initialForm.getAccessToken(), accessToken);
         assertEquals(submittedFormInDb.getTargetDisease(), KirTracingForm.Disease.COVID_19);
 
@@ -267,19 +261,14 @@ class KirTracingEpsTest {
 
         final KirTracingForm initialForm = KirTracingForm.builder().build();
 
-        final SRP6JavaClientSessionSHA256 client = new SRP6JavaClientSessionSHA256(
-                srpParamsConfig.getNBase10(), srpParamsConfig.getGBase10());
+        SRP6VerifierGenerator gen = new SRP6VerifierGenerator(srpParamsConfig.getConfig());
 
-        final String salt = client
-                .generateRandomSalt(SRP6JavascriptServerSessionSHA256.HASH_BYTE_LENGTH);
+        BigInteger salt = BigIntegerUtils.bigIntegerFromBytes(gen.generateRandomSalt(srpParamsConfig.getSaltByteCount()));
 
-        final HexHashedVerifierGenerator generator = new HexHashedVerifierGenerator(
-                srpParamsConfig.getNBase10(), srpParamsConfig.getGBase10(), SRP6JavascriptServerSessionSHA256.SHA_256);
+        final BigInteger verifier = gen.generateVerifier(salt, initialForm.getAccessToken(), "Iris$Frankfurt2022!");
 
-        final String verifier = generator.generateVerifier(salt, initialForm.getAccessToken(), "Iris$Frankfurt2022!");
-
-        initialForm.setSrpVerifier(verifier);
-        initialForm.setSrpSalt(salt);
+        initialForm.setSrpVerifier(verifier.toString(16));
+        initialForm.setSrpSalt(salt.toString(16));
         kirTracingForms.save(initialForm);
 
         var response = given()
@@ -299,12 +288,12 @@ class KirTracingEpsTest {
 
         KirTracingForm submittedFormInDb = kirTracingForms.findByAccessToken(initialForm.getAccessToken()).get();
 
-        assertEquals(verifier, submittedFormInDb.getSrpVerifier());
-        assertEquals(salt, submittedFormInDb.getSrpSalt());
+        assertEquals(verifier.toString(16), submittedFormInDb.getSrpVerifier());
+        assertEquals(salt.toString(16), submittedFormInDb.getSrpSalt());
         assertEquals(submittedFormInDb.getAccessToken(), initialForm.getAccessToken());
         assertEquals(submittedFormInDb.getTargetDisease(), KirTracingForm.Disease.COVID_19);
-        assertNotNull(submittedFormInDb.getSrpSession());
-        assertEquals(submittedFormInDb.getSrpSession().getPublicServerValue(), challenge);
+        assertNotNull(submittedFormInDb.getSrpServerSession());
+        assertEquals(submittedFormInDb.getSrpServerSession().getPublicServerValue(), BigIntegerUtils.fromHex(challenge));
 
         assertEquals(formsCount + 1, kirTracingForms.count());
     }
@@ -322,8 +311,7 @@ class KirTracingEpsTest {
                         .build())
                 .build());
 
-        final SRP6JavaClientSessionSHA256 client = new SRP6JavaClientSessionSHA256(
-                srpParamsConfig.getNBase10(), srpParamsConfig.getGBase10());
+        SRP6ClientSession client = new SRP6ClientSession();
 
         String serverChallenge = getServerChallenge(form, client);
 
@@ -331,7 +319,9 @@ class KirTracingEpsTest {
 
         client.step1(form.getAccessToken(), "Iris$Frankfurt2022!");
 
-        SRP6ClientCredentials credentials = client.step2(form.getSrpSalt(), serverChallenge);
+        SRP6ClientCredentials credentials = client.step2(srpParamsConfig.getConfig(),
+                BigIntegerUtils.fromHex(form.getSrpSalt()),
+                BigIntegerUtils.fromHex(serverChallenge));
 
         var response = given()
                 .body(String.format(VALID_FORM_UPDATE_REQUEST, dat, credentials.A.toString(16), credentials.M1.toString(16), form.getAccessToken()))
@@ -351,7 +341,7 @@ class KirTracingEpsTest {
         assertThat(accessToken).isNotBlank().hasSize(10);
         assertEquals(accessToken, formResult.getAccessToken());
         assertEquals(formsCount, kirTracingForms.count());
-        assertEquals(null, formResult.getSrpSession());
+        assertEquals(null, formResult.getSrpServerSession());
        // assertEquals("+4915108154711", formResult.getPerson().getMobilePhone());
     }
 
@@ -368,8 +358,7 @@ class KirTracingEpsTest {
                         .build())
                 .build());
 
-        final SRP6JavaClientSessionSHA256 client = new SRP6JavaClientSessionSHA256(
-                srpParamsConfig.getNBase10(), srpParamsConfig.getGBase10());
+        final SRP6ClientSession client = new SRP6ClientSession();
 
         String serverChallenge = getServerChallenge(form, client);
 
@@ -377,10 +366,12 @@ class KirTracingEpsTest {
 
         client.step1(form.getAccessToken(), "Iris$Frankfurt2022!");
 
-        SRP6ClientCredentials credentials = client.step2(form.getSrpSalt(), serverChallenge);
+        SRP6ClientCredentials credentials = client.step2(srpParamsConfig.getConfig(),
+                BigIntegerUtils.fromHex(form.getSrpSalt()),
+                BigIntegerUtils.fromHex(serverChallenge));
 
         var response = given()
-                .body(String.format(VALID_FORM_UPDATE_REQUEST, dat, credentials.A, credentials.M1, form.getAccessToken()))
+                .body(String.format(VALID_FORM_UPDATE_REQUEST, dat, credentials.A.toString(16), credentials.M1.toString(16), form.getAccessToken()))
 
                 .when()
                 .post("/data-submission-rpc")
@@ -397,29 +388,26 @@ class KirTracingEpsTest {
         assertThat(accessToken).isNotBlank().hasSize(10);
         assertEquals(accessToken, formResult.getAccessToken());
         assertEquals(formsCount, kirTracingForms.count());
-        assertEquals(null, formResult.getSrpSession());
+        assertEquals(null, formResult.getSrpServerSession());
         assertNotNull(formResult.getTherapyResults());
     }
 
-    private String getServerChallenge(KirTracingForm form, SRP6JavaClientSessionSHA256 client) {
-        final String salt = client
-                .generateRandomSalt(SRP6JavascriptServerSessionSHA256.HASH_BYTE_LENGTH);
+    private String getServerChallenge(KirTracingForm form, SRP6ClientSession client) {
+        SRP6VerifierGenerator gen = new SRP6VerifierGenerator(srpParamsConfig.getConfig());
 
-        final HexHashedVerifierGenerator generator = new HexHashedVerifierGenerator(
-                srpParamsConfig.getNBase10(), srpParamsConfig.getGBase10(), SRP6JavascriptServerSessionSHA256.SHA_256);
+        BigInteger salt = BigIntegerUtils.bigIntegerFromBytes(gen.generateRandomSalt(srpParamsConfig.getSaltByteCount()));
 
-        final String verifier = generator.generateVerifier(salt, form.getAccessToken(), "Iris$Frankfurt2022!");
+        final BigInteger verifier = gen.generateVerifier(salt, form.getAccessToken(), "Iris$Frankfurt2022!");
 
-        SRP6JavascriptServerSession srpValidator = new SRP6JavascriptServerSessionSHA256(
-                srpParamsConfig.getNBase10(), srpParamsConfig.getGBase10());
+        SRP6ServerSession serverSession = new SRP6ServerSession(srpParamsConfig.getConfig());
 
-        String serverChallenge = srpValidator.step1(form.getAccessToken(), salt, verifier);
+        BigInteger serverChallenge = serverSession.step1(form.getAccessToken(), salt, verifier);
 
-        form.setSrpSession(srpValidator);
-        form.setSrpSalt(salt);
-        form.setSrpVerifier(verifier);
+        form.setSrpSession(serverSession);
+        form.setSrpSalt(salt.toString(16));
+        form.setSrpVerifier(verifier.toString(16));
         kirTracingForms.save(form);
-        return serverChallenge;
+        return serverChallenge.toString(16);
     }
 
     @Test
@@ -435,19 +423,18 @@ class KirTracingEpsTest {
                         .build())
                 .build());
 
-        final SRP6JavaClientSessionSHA256 client = new SRP6JavaClientSessionSHA256(
-                srpParamsConfig.getNBase10(), srpParamsConfig.getGBase10());
+        SRP6ClientSession client = new SRP6ClientSession();
 
         String serverChallenge = getServerChallenge(form, client);
 
+        form.setSrpSession(null);
+        kirTracingForms.save(form);
+
         client.step1(form.getAccessToken(), "Iris$Frankfurt2022!");
 
-        SRP6ClientCredentials credentials = client.step2(form.getSrpSalt(), serverChallenge);
-
-        SRP6JavascriptServerSession srpValidator = new SRP6JavascriptServerSessionSHA256(
-                srpParamsConfig.getNBase10(), srpParamsConfig.getGBase10());
-
-        String M2 = srpValidator.step2(toHex(credentials.A), toHex(credentials.M1));
+        SRP6ClientCredentials credentials = client.step2(srpParamsConfig.getConfig(),
+                BigIntegerUtils.fromHex(form.getSrpSalt()),
+                BigIntegerUtils.fromHex(serverChallenge));
 
         var response = given()
                 .body(String.format(VALID_FORM_UPDATE_REQUEST, dat, credentials.A, credentials.M1, form.getAccessToken()))
@@ -473,8 +460,7 @@ class KirTracingEpsTest {
                         .build())
                 .build());
 
-        final SRP6JavaClientSessionSHA256 client = new SRP6JavaClientSessionSHA256(
-                srpParamsConfig.getNBase10(), srpParamsConfig.getGBase10());
+        SRP6ClientSession client = new SRP6ClientSession();
 
         String serverChallenge = getServerChallenge(form, client);
 
@@ -482,7 +468,9 @@ class KirTracingEpsTest {
 
         client.step1(form.getAccessToken(), "WrongPassword!");
 
-        SRP6ClientCredentials credentials = client.step2(form.getSrpSalt(), serverChallenge);
+        SRP6ClientCredentials credentials = client.step2(srpParamsConfig.getConfig(),
+                BigIntegerUtils.fromHex(form.getSrpSalt()),
+                BigIntegerUtils.fromHex(serverChallenge));
 
         var response = given()
                 .body(String.format(VALID_FORM_UPDATE_REQUEST, dat, credentials.A, credentials.M1, form.getAccessToken()))

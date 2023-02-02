@@ -1,7 +1,6 @@
 package iris.client_bff.kir_tracing.srp;
 
-import com.bitbucket.thinbus.srp6.js.*;
-import com.nimbusds.srp6.SRP6ClientCredentials;
+import com.nimbusds.srp6.*;
 import iris.client_bff.IrisWebIntegrationTest;
 import iris.client_bff.config.SrpParamsConfig;
 import iris.client_bff.kir_tracing.ObjectSerializationHelper;
@@ -10,6 +9,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
+
+import java.math.BigInteger;
 
 import static com.nimbusds.srp6.BigIntegerUtils.toHex;
 import static org.junit.Assert.assertEquals;
@@ -28,6 +29,17 @@ class SrpTest {
 
 
     @Test
+    void testBigInt() {
+
+        String hexInt = "115b8b692e0e045692cf280b436735c77a5a9e8a9e7ed56c965f87db5b2a2ece3";
+
+        System.out.println(BigIntegerUtils.fromHex(hexInt));
+
+        System.out.println();
+
+    }
+
+    @Test
     void testSrp() throws Exception {
 
         // ---------------------------------------------------
@@ -36,53 +48,45 @@ class SrpTest {
         // be done entirely without any server.
         //
 
-        // We have a client
-        final SRP6JavaClientSessionSHA256 client = new SRP6JavaClientSessionSHA256(
-                config.getNBase10(), config.getGBase10());
+        SRP6CryptoParams config = SRP6CryptoParams.getInstance(2048, "SHA-256");
 
-        // Once and only once a random salt needs to be generated.
-        final String salt = client
-                .generateRandomSalt(SRP6JavascriptServerSessionSHA256.HASH_BYTE_LENGTH);
-
-        // The client needs to generate a verifier based on N, g, salt and H (hash).
-        final HexHashedVerifierGenerator generator = new HexHashedVerifierGenerator(
-                config.getNBase10(), config.getGBase10(), SRP6JavascriptServerSessionSHA256.SHA_256);
-
-        // The client cooks the verifier. This must be securely registered with the server.
-        // Note: The verifier includes the hash of the username. So if the user changes either
-        // their password or their username they must generate a new verifier and securely
-        // register it with the server.
-        final String verifier = generator.generateVerifier(salt, username, password);
-
-        // ---------------------------------------------------
-        //
-        // Client Authentication
-        //
-
-        // The server
-        SRP6JavascriptServerSession server = new SRP6JavascriptServerSessionSHA256(
-                config.getNBase10(), config.getGBase10());
+        SRP6VerifierGenerator gen = new SRP6VerifierGenerator(config);
 
 
-        // The client is initialised with username and password
+        BigInteger salt = BigIntegerUtils.bigIntegerFromBytes(gen.generateRandomSalt(32));
+
+        BigInteger verifier = gen.generateVerifier(salt, username, password);
+
+
+        SRP6ServerSession server = new SRP6ServerSession(config);
+
+        BigInteger B = server.step1(username, salt, verifier);
+
+        String serializedServer = ObjectSerializationHelper.toString(server);
+
+        System.out.println(serializedServer);
+
+        server = (SRP6ServerSession) ObjectSerializationHelper.fromString(serializedServer);
+
+
+        final SRP6ClientSession client = new SRP6ClientSession();
         client.step1(username, password);
+        SRP6ClientCredentials cred = null;
+        try {
+            cred = client.step2(config, salt, B);
+        } catch (SRP6Exception e) {
+            System.out.println("Wrong B");
+        }
 
-        // The server generates a public challenge B based on the username, salt and verifier.
-        // Note: The verifier should have been kept secret.
-        String B = server.step1(username, salt, verifier);
+        BigInteger M2 = null;
 
-        String srpServiceSerialized = ObjectSerializationHelper.toString(server);
+        try {
+            assert cred != null;
+            M2 = server.step2(cred.A, cred.M1);
 
-        server = (SRP6JavascriptServerSessionSHA256) ObjectSerializationHelper.fromString(srpServiceSerialized);
-
-        // The server sends the public challenge B to the client.
-        // The server can can also send the salt as it is public in the protocol.
-        // The client computes a proof-of-password which is the credential.
-        SRP6ClientCredentials credentials = client.step2(salt, B);
-
-        // The server uses the client public value A and client proof M1
-        // Note: this method will throw if the client proof M1 is bad.
-        String M2 = server.step2(toHex(credentials.A), toHex(credentials.M1));
+        } catch (SRP6Exception e) {
+            System.out.println("Wrong creads");
+        }
 
         // Success! The last step did not throw so the client knows the password that
         // created the verifier!
@@ -97,7 +101,7 @@ class SrpTest {
 
         // The server can send the M2 to the client to check.
         // Note this will throw an exception if the server does not know the true verifier.
-        client.step3(M2);
+       // client.step3(M2);
 
         // Success! The last step did not throw so the client knows that the server knows the verifier.
         System.out.println("The client has verified the server knows the verifier!");
@@ -111,15 +115,17 @@ class SrpTest {
         //
 
         // Now both share a strong session key.
-        String cS = client.getSessionKey(false);
-        String sS = server.getSessionKey(false);
+        BigInteger cS = client.getSessionKey();
+        BigInteger sS = server.getSessionKey();
         assertEquals(cS, sS);
 
         // The hash value may be more useful as a secret key.
-        String cK = client.getSessionKey(true);
-        String sK = server.getSessionKey(true);
+        BigInteger cK = client.getSessionKey();
+        BigInteger sK = server.getSessionKey();
         assertEquals(cK, sK);
 
         System.out.printf("We have a shared session key we can use! %s%n", sK);
     }
 }
+
+

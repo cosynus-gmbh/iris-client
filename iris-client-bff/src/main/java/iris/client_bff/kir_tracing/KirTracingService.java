@@ -1,13 +1,16 @@
 package iris.client_bff.kir_tracing;
 
-import com.bitbucket.thinbus.srp6.js.SRP6JavascriptServerSession;
-import com.bitbucket.thinbus.srp6.js.SRP6JavascriptServerSessionSHA256;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.nimbusds.srp6.BigIntegerUtils;
 import com.nimbusds.srp6.SRP6ClientCredentials;
+import com.nimbusds.srp6.SRP6ServerSession;
 import iris.client_bff.config.SrpParamsConfig;
 import iris.client_bff.core.alert.AlertService;
 import iris.client_bff.core.database.HibernateSearcher;
 import iris.client_bff.kir_tracing.IncomingKirConnection.IncomingKirConnectionIdentifier;
 import iris.client_bff.kir_tracing.eps.KirChallengeDto;
+import iris.client_bff.kir_tracing.eps.KirTracingController;
+import iris.client_bff.kir_tracing.eps.KirTracingController.KirAuthorizationResponseDto;
 import iris.client_bff.kir_tracing.eps.KirTracingController.KirConnectionDto;
 import iris.client_bff.kir_tracing.eps.KirTracingController.KirConnectionResultDto;
 import iris.client_bff.kir_tracing.eps.KirTracingController.KirFormSubmissionResultDto;
@@ -30,13 +33,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 
 import javax.validation.constraints.NotNull;
+import java.math.BigInteger;
 import java.security.InvalidParameterException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
-
-import static com.nimbusds.srp6.BigIntegerUtils.toHex;
 
 /**
  * @author Tim Lusa
@@ -69,13 +71,10 @@ public class KirTracingService {
 
         try {
 
-            var tokens = new VaccinationInfoController.Tokens(
-                    connection.getAnnouncementToken(),
-                    connection.getId()
-                            .toString());
+            var tokens = new VaccinationInfoController.Tokens(connection.getAnnouncementToken(), connection.getId()
+                    .toString());
 
-            EncryptedConnectionsService.EncryptedDataDto encryptedData =
-                    encryptedConnectionsService.encryptAndCreateResult(tokens, connectionData.submitterPublicKey());
+            EncryptedConnectionsService.EncryptedDataDto encryptedData = encryptedConnectionsService.encryptAndCreateResult(tokens, connectionData.submitterPublicKey());
 
             return (new KirConnectionResultDto(encryptedData.hdPublicKey(), encryptedData.iv(), encryptedData.tokens()));
         } catch (Exception e) {
@@ -154,34 +153,42 @@ public class KirTracingService {
         return new KirFormSubmissionResultDto(targetForm.getAccessToken());
     }
 
-    public KirFormSubmissionResultDto updateKirTracingForm(SRP6ClientCredentials credentials, String accessToken, KirTracingFormDto formDto) {
+    public KirFormSubmissionResultDto updateKirTherapyResults(SRP6ClientCredentials credentials, String accessToken, JsonNode therapyResults) {
 
+        KirTracingForm form = authorize(credentials, accessToken).form;
+        KirTracingFormDto updatedForm = KirTracingFormDto.builder()
+                .therapyResults(therapyResults)
+                .build();
+        form = mapper.update(form, updatedForm);
+        form.setSrpSession(null);
+        tracingForms.save(form);
+
+        return new KirFormSubmissionResultDto(accessToken);
+    }
+
+    public KirAuthorizationResponseDto authorizeKir(SRP6ClientCredentials credentials, String accessToken) {
+        return new KirAuthorizationResponseDto(authorize(credentials, accessToken).M2);
+    }
+
+    private AuthorizationResult authorize(SRP6ClientCredentials credentials, String accessToken) {
         KirTracingForm form = tracingForms.findByAccessToken(accessToken)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid credentials"));
 
-        SRP6JavascriptServerSession srpValidator = form.getSrpSession();
+        SRP6ServerSession srpValidator = form.getSrpServerSession();
         if (srpValidator == null) throw new IllegalArgumentException("No session available");
         try {
-            String M2 = srpValidator.step2(toHex(credentials.A), toHex(credentials.M1));
+            BigInteger M2 = srpValidator.step2(credentials.A, credentials.M1);
+
+            return new AuthorizationResult(form, BigIntegerUtils.toHex(M2));
         } catch (Exception e) {
             log.error(e.getMessage(), e);
             throw new IllegalArgumentException("Invalid credentials");
         }
-
-        form = mapper.update(form, formDto);
-        form.setSrpSession(null);
-        tracingForms.save(form);
-        return new KirFormSubmissionResultDto(accessToken);
     }
 
     public Page<KirTracingForm> search(String searchString, Pageable pageable) {
 
-        var result = searcher.search(
-                searchString,
-                pageable,
-                FIELDS,
-                it -> it,
-                KirTracingForm.class);
+        var result = searcher.search(searchString, pageable, FIELDS, it -> it, KirTracingForm.class);
 
         return new PageImpl<>(result.hits(), pageable, result.total()
                 .hitCount());
@@ -207,20 +214,25 @@ public class KirTracingService {
         KirTracingForm form = tracingForms.findByAccessToken(accessToken)
                 .orElseThrow(() -> new InvalidParameterException("Invalid access token"));
 
-        if (form.getSrpSalt().isEmpty() || form.getSrpVerifier().isEmpty()) throw new InvalidParameterException("Invalid credentials");
+        if (form.getSrpSalt()
+                .isEmpty() || form.getSrpVerifier()
+                .isEmpty()) throw new InvalidParameterException("Invalid credentials");
 
-        SRP6JavascriptServerSession srpValidator = new SRP6JavascriptServerSessionSHA256(srpParamsConfig.getNBase10(), srpParamsConfig.getGBase10());
+        SRP6ServerSession serverSession = new SRP6ServerSession(srpParamsConfig.getConfig());
 
-        String challenge = srpValidator.step1(form.getAccessToken(), form.getSrpSalt(), form.getSrpVerifier());
+        BigInteger challenge = serverSession.step1(form.getAccessToken(), BigIntegerUtils.fromHex(form.getSrpSalt()), BigIntegerUtils.fromHex(form.getSrpVerifier()));
 
-        form.setSrpSession(srpValidator);
+        form.setSrpSession(serverSession);
 
         tracingForms.save(form);
 
         return KirChallengeDto.builder()
-                .challenge(challenge)
+                .challenge(challenge.toString(16))
                 .salt(form.getSrpSalt())
                 .build();
+    }
+
+    record AuthorizationResult(KirTracingForm form, String M2) {
     }
 
     @ConfigurationProperties("iris.client.kirtracing")

@@ -5,6 +5,7 @@ import iris.client_bff.core.serialization.DefuseJsonString;
 import iris.client_bff.core.validation.AttackDetector;
 import iris.client_bff.core.validation.NoSignOfAttack;
 import iris.client_bff.core.validation.NoSignOfAttackJsonNode;
+import lombok.Builder;
 import lombok.Data;
 import lombok.ToString;
 import org.springframework.validation.annotation.Validated;
@@ -15,6 +16,7 @@ import javax.validation.constraints.NotNull;
 @Data
 @Validated
 @ToString
+@Builder
 public class KirTracingFormDto {
 
     @Valid

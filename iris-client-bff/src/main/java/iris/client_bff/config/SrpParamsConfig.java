@@ -1,5 +1,6 @@
 package iris.client_bff.config;
 
+import com.nimbusds.srp6.SRP6CryptoParams;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -16,10 +17,12 @@ import javax.validation.constraints.NotNull;
 @Data
 public class SrpParamsConfig {
 
-    @NotNull
-    private String nBase10;
+    public SRP6CryptoParams getConfig() {
+      return SRP6CryptoParams.getInstance(2048, "SHA-256");
+    }
 
-    @NotNull
-    private String gBase10;
+    public int getSaltByteCount() {
+        return 32;
+    }
 
 }
