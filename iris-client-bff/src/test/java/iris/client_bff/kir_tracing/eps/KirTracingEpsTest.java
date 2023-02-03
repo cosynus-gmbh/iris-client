@@ -23,6 +23,7 @@ import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 
+import javax.validation.constraints.NotNull;
 import java.math.BigInteger;
 import java.security.GeneralSecurityException;
 import java.security.PrivateKey;
@@ -31,7 +32,6 @@ import java.time.Instant;
 import java.util.Locale;
 import java.util.UUID;
 
-import static com.nimbusds.srp6.BigIntegerUtils.toHex;
 import static io.restassured.module.mockmvc.RestAssuredMockMvc.given;
 import static iris.client_bff.kir_tracing.eps.KirTracingTestData.*;
 import static iris.client_bff.matchers.IrisMatchers.isCatWith;
@@ -299,8 +299,8 @@ class KirTracingEpsTest {
     }
 
     @Test
-    @DisplayName("update kir tracing form: valid request ⇒ 💾 kirtracingform + 🔙 auth token")
-    void updateKirTracingForm_ValidRequest() throws Exception {
+    @DisplayName("submit therapy results: valid request ⇒ 💾 kirtracingform + 🔙 auth token")
+    void submitTherapyResults_ValidRequest() throws Exception {
 
         UUID dat = getConnectionUuid();
 
@@ -324,7 +324,7 @@ class KirTracingEpsTest {
                 BigIntegerUtils.fromHex(serverChallenge));
 
         var response = given()
-                .body(String.format(VALID_FORM_UPDATE_REQUEST, dat, credentials.A.toString(16), credentials.M1.toString(16), form.getAccessToken()))
+                .body(String.format(VALID_SUBMIT_THERAPY_REQUEST, dat, credentials.A.toString(16), credentials.M1.toString(16), form.getAccessToken()))
 
                 .when()
                 .post("/data-submission-rpc")
@@ -341,56 +341,11 @@ class KirTracingEpsTest {
         assertThat(accessToken).isNotBlank().hasSize(10);
         assertEquals(accessToken, formResult.getAccessToken());
         assertEquals(formsCount, kirTracingForms.count());
-        assertEquals(null, formResult.getSrpServerSession());
-       // assertEquals("+4915108154711", formResult.getPerson().getMobilePhone());
+        assertNull(formResult.getSrpServerSession());
+       assertNotNull(formResult.getTherapyResults());
+       assertEquals(KirTracingForm.Status.THERAPY_RESULTS_RECEIVED, formResult.getStatus());
     }
 
-    @Test
-    @DisplayName("update kir tracing form: valid request ⇒ 💾 kirtracingform + 🔙 auth token")
-    void updateKirTracingFormWithTherapyEnd_ValidRequest() throws Exception {
-
-        UUID dat = getConnectionUuid();
-
-        KirTracingForm form = kirTracingForms.save(KirTracingForm.builder()
-
-                .person(KirTracingForm.Person.builder()
-                        .mobilePhone("+4915147110815")
-                        .build())
-                .build());
-
-        final SRP6ClientSession client = new SRP6ClientSession();
-
-        String serverChallenge = getServerChallenge(form, client);
-
-        var formsCount = kirTracingForms.count();
-
-        client.step1(form.getAccessToken(), "Iris$Frankfurt2022!");
-
-        SRP6ClientCredentials credentials = client.step2(srpParamsConfig.getConfig(),
-                BigIntegerUtils.fromHex(form.getSrpSalt()),
-                BigIntegerUtils.fromHex(serverChallenge));
-
-        var response = given()
-                .body(String.format(VALID_FORM_UPDATE_REQUEST, dat, credentials.A.toString(16), credentials.M1.toString(16), form.getAccessToken()))
-
-                .when()
-                .post("/data-submission-rpc")
-
-                .then()
-                .status(OK)
-                .extract()
-                .jsonPath();
-
-        var accessToken = response.getString("result.accessToken");
-
-        KirTracingForm formResult = kirTracingForms.findByAccessToken(accessToken).get();
-
-        assertThat(accessToken).isNotBlank().hasSize(10);
-        assertEquals(accessToken, formResult.getAccessToken());
-        assertEquals(formsCount, kirTracingForms.count());
-        assertEquals(null, formResult.getSrpServerSession());
-        assertNotNull(formResult.getTherapyResults());
-    }
 
     private String getServerChallenge(KirTracingForm form, SRP6ClientSession client) {
         SRP6VerifierGenerator gen = new SRP6VerifierGenerator(srpParamsConfig.getConfig());
@@ -411,8 +366,8 @@ class KirTracingEpsTest {
     }
 
     @Test
-    @DisplayName("update kir tracing form: no srp session ⇒ 💾 nothing + 🔙 error")
-    void updateKirTracingForm_NoSrpSession() throws Exception {
+    @DisplayName("authorize with password: no srp session ⇒ 💾 nothing + 🔙 error")
+    void authorize_NoSrpSession() throws Exception {
 
         UUID dat = getConnectionUuid();
 
@@ -437,7 +392,7 @@ class KirTracingEpsTest {
                 BigIntegerUtils.fromHex(serverChallenge));
 
         var response = given()
-                .body(String.format(VALID_FORM_UPDATE_REQUEST, dat, credentials.A, credentials.M1, form.getAccessToken()))
+                .body(String.format(VALID_AUTHORIZE_REQUEST, dat, credentials.A, credentials.M1, form.getAccessToken()))
 
                 .when()
                 .post("/data-submission-rpc")
@@ -445,6 +400,45 @@ class KirTracingEpsTest {
                 .then()
                 .status(BAD_REQUEST)
                 .body("error.message", containsString("No session"));
+    }
+
+    @Test
+    @DisplayName("authorize with password: successfull ⇒ 💾 nothing + 🔙 M2")
+    void authorize_Successful() throws Exception {
+
+        UUID dat = getConnectionUuid();
+
+        KirTracingForm form = kirTracingForms.save(KirTracingForm.builder()
+
+                .person(KirTracingForm.Person.builder()
+                        .mobilePhone("+4915147110815")
+                        .build())
+                .build());
+
+        SRP6ClientSession client = new SRP6ClientSession();
+
+        String serverChallenge = getServerChallenge(form, client);
+
+        client.step1(form.getAccessToken(), "Iris$Frankfurt2022!");
+
+        SRP6ClientCredentials credentials = client.step2(srpParamsConfig.getConfig(),
+                BigIntegerUtils.fromHex(form.getSrpSalt()),
+                BigIntegerUtils.fromHex(serverChallenge));
+
+        var response = given()
+                .body(String.format(VALID_AUTHORIZE_REQUEST, dat, BigIntegerUtils.toHex(credentials.A), BigIntegerUtils.toHex(credentials.M1), form.getAccessToken()))
+
+                .when()
+                .post("/data-submission-rpc")
+
+                .then()
+                .status(OK)
+                .extract()
+                .jsonPath();
+
+        assertNotNull(response.getString("result.M2"));
+
+
     }
 
     @Test
@@ -473,7 +467,7 @@ class KirTracingEpsTest {
                 BigIntegerUtils.fromHex(serverChallenge));
 
         var response = given()
-                .body(String.format(VALID_FORM_UPDATE_REQUEST, dat, credentials.A, credentials.M1, form.getAccessToken()))
+                .body(String.format(VALID_SUBMIT_THERAPY_REQUEST, dat, credentials.A, credentials.M1, form.getAccessToken()))
 
                 .when()
                 .post("/data-submission-rpc")
@@ -498,7 +492,7 @@ class KirTracingEpsTest {
 
 
         given()
-                .body(String.format(VALID_FORM_UPDATE_REQUEST, dat, 1, 1, RandomStringUtils.randomAlphanumeric(10).toUpperCase()))
+                .body(String.format(VALID_SUBMIT_THERAPY_REQUEST, dat, 1, 1, RandomStringUtils.randomAlphanumeric(10).toUpperCase()))
 
                 .when()
                 .post("/data-submission-rpc")

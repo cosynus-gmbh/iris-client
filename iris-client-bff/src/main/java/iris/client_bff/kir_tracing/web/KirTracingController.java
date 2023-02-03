@@ -12,7 +12,11 @@ import org.springframework.data.domain.Sort;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
+import javax.websocket.server.PathParam;
 import java.util.Optional;
+import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor
@@ -34,7 +38,16 @@ public class KirTracingController {
 				.map(it -> service.search(it, pageable))
 				.orElseGet(() -> service.getAll(newPageable));
 
+		System.out.println(kirTracingForms.getContent());
+
 		return kirTracingForms.map(mapper::toDto);
+	}
+
+	@PatchMapping("/{formId}")
+	public KirTracingFormDto updateKirTracingFormStatus(
+			@PathVariable UUID formId, @RequestBody @Valid @NotNull KirTracingFormStatusUpdateDto updatedStatus) {
+
+		return service.updateFormStatus(formId, updatedStatus);
 	}
 
 	private PageRequest adaptPageable(Pageable pageable) {

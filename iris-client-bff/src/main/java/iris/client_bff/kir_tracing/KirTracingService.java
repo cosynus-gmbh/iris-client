@@ -16,6 +16,7 @@ import iris.client_bff.kir_tracing.eps.KirTracingController.KirConnectionResultD
 import iris.client_bff.kir_tracing.eps.KirTracingController.KirFormSubmissionResultDto;
 import iris.client_bff.kir_tracing.eps.KirTracingFormDto;
 import iris.client_bff.kir_tracing.mapper.KirTracingFormDataMapper;
+import iris.client_bff.kir_tracing.web.KirTracingFormStatusUpdateDto;
 import iris.client_bff.proxy.IRISAnnouncementException;
 import iris.client_bff.proxy.ProxyServiceClient;
 import iris.client_bff.vaccination_info.EncryptedConnectionsService;
@@ -32,6 +33,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 
+import javax.persistence.EntityNotFoundException;
 import javax.validation.constraints.NotNull;
 import java.math.BigInteger;
 import java.security.InvalidParameterException;
@@ -48,7 +50,7 @@ import java.util.UUID;
 @Slf4j
 public class KirTracingService {
 
-    private static final String[] FIELDS = {"person.mobilePhone"};
+    private static final String[] FIELDS = {"assessment", "therapyResults", "person.mobilePhone"};
 
     private final ProxyServiceClient proxyClient;
     private final IncomingKirConnectionRepository incomingConnections;
@@ -161,6 +163,7 @@ public class KirTracingService {
                 .build();
         form = mapper.update(form, updatedForm);
         form.setSrpSession(null);
+        form.setStatus(KirTracingForm.Status.THERAPY_RESULTS_RECEIVED);
         tracingForms.save(form);
 
         return new KirFormSubmissionResultDto(accessToken);
@@ -230,6 +233,18 @@ public class KirTracingService {
                 .challenge(challenge.toString(16))
                 .salt(form.getSrpSalt())
                 .build();
+    }
+
+    public KirTracingFormDto updateFormStatus(UUID formId, KirTracingFormStatusUpdateDto updatedStatus) {
+
+        KirTracingForm form = tracingForms.findById(KirTracingForm.KirTracingFormIdentifier.of(formId))
+                .orElseThrow(EntityNotFoundException::new);
+
+        form.setStatus(updatedStatus.getStatus());
+        tracingForms.save(form);
+
+        return mapper.toDto(form);
+
     }
 
     record AuthorizationResult(KirTracingForm form, String M2) {

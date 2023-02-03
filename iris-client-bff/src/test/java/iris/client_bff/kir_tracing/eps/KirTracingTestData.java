@@ -53,11 +53,23 @@ public interface KirTracingTestData {
 			}
 			""";
 
-	String JSON_RPC_UPDATE_REQUEST = """
+	String JSON_RPC_SUBMIT_THERAPY_REQUEST = """
 			{
 			    "id":"1",
 			    "jsonrpc":"2.0",
 			    "method":"submitKirTherapyResults",
+			    "params":{
+			    		"_client":{"name":"hd-1"},
+			    		%s
+			    }
+			}
+			""";
+
+	String JSON_RPC_AUTHORIZE_REQUEST = """
+			{
+			    "id":"1",
+			    "jsonrpc":"2.0",
+			    "method":"authorizeKir",
 			    "params":{
 			    		"_client":{"name":"hd-1"},
 			    		%s
@@ -98,28 +110,21 @@ public interface KirTracingTestData {
 			"dataAuthorizationToken":"%s"
 			""");
 
-	String VALID_FORM_UPDATE_REQUEST = String.format(JSON_RPC_UPDATE_REQUEST, """
+	String VALID_AUTHORIZE_REQUEST = String.format(JSON_RPC_AUTHORIZE_REQUEST, """
 			"dataAuthorizationToken":"%s",
 			"a": "%s",
 			"m1": "%s",
-			"accessToken":"%s",
-			"form":{
-				"therapyResults": {
-					"form": {
-						"key":"value"
-					}
-				}			
-			}
+			"accessToken":"%s"
 			""");
 
-	String VALID_FORM_UPDATE_THERAPY_REQUEST = String.format(JSON_RPC_UPDATE_REQUEST, """
+	String VALID_SUBMIT_THERAPY_REQUEST = String.format(JSON_RPC_SUBMIT_THERAPY_REQUEST, """
 			"dataAuthorizationToken":"%s",
 			"a": "%s",
 			"m1": "%s",
 			"accessToken":"%s",
 			"form":{
-			"person": {
-					"mobilePhone":"+4915108154711"
+			"therapyResults": {
+					"successful":true
 				}
 			}
 			""");

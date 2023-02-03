@@ -7,6 +7,7 @@ import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.hibernate.search.engine.backend.types.Sortable;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.FullTextField;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.GenericField;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.Indexed;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.IndexedEmbedded;
@@ -46,8 +47,10 @@ public class KirTracingForm extends Aggregate<KirTracingForm, KirTracingForm.Kir
     @IndexedEmbedded
     private Person person;
 
+    @FullTextField
     private String assessment;
 
+    @FullTextField
     private String therapyResults;
 
     @Column(nullable = false)
@@ -110,7 +113,7 @@ public class KirTracingForm extends Aggregate<KirTracingForm, KirTracingForm.Kir
     }
 
     public enum Status {
-        NEW, PERSON_CONTACTED, DATA_CHANGED, THERAPY_END, DONE
+        NEW, PERSON_CONTACTED, DATA_CHANGED, THERAPY_RESULTS_RECEIVED, DONE
     }
 
     public enum Disease {
