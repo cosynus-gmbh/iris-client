@@ -79,7 +79,7 @@ public class KirTracingControllerImpl implements KirTracingController {
     @Override
     public KirFormSubmissionResultDto submitKirTherapyResults(UUID dataAuthorizationToken, String a, String m1, String accessToken, JsonNode formDto) {
 
-        log.debug("Start updating KIR form (JSON-RPC interface)");
+        log.debug("Start submitting KIR therapy results (JSON-RPC interface)");
 
         if (!service.validateConnection(dataAuthorizationToken)) {
             throw new IllegalArgumentException("Unknown dataAuthorizationToken: " + dataAuthorizationToken);
@@ -89,14 +89,14 @@ public class KirTracingControllerImpl implements KirTracingController {
 
         var result = service.updateKirTherapyResults(credentials, accessToken, formDto);
 
-        log.trace("Finish updating KIR form (JSON-RPC interface)");
+        log.trace("Finish submitting KIR therapy results (JSON-RPC interface)");
 
         return result;
     }
 
     @Override
     public KirAuthorizationResponseDto authorizeKir(UUID dataAuthorizationToken, String a, String m1, String accessToken) {
-        log.debug("Start updating KIR form (JSON-RPC interface)");
+        log.debug("Start authorizing kir user (JSON-RPC interface)");
 
         if (!service.validateConnection(dataAuthorizationToken)) {
             throw new IllegalArgumentException("Unknown dataAuthorizationToken: " + dataAuthorizationToken);
@@ -106,7 +106,7 @@ public class KirTracingControllerImpl implements KirTracingController {
 
         KirAuthorizationResponseDto result = service.authorizeKir(credentials, accessToken);
 
-        log.trace("Finish updating KIR form (JSON-RPC interface)");
+        log.trace("Finish authorizing kir user (JSON-RPC interface)");
 
         return result;
     }

@@ -134,7 +134,7 @@ public class KirTracingService {
         Optional<IncomingKirConnection> connection = incomingConnections.findById(IncomingKirConnectionIdentifier.of(dat));
         log.debug(String.format("Connection is valid: %s", connection.isPresent()));
         connection.ifPresent(incomingKirConnection -> {
-            removeIncomingConnection(incomingKirConnection.getId());
+          //  removeIncomingConnection(incomingKirConnection.getId());
         });
         return connection.isPresent();
     }

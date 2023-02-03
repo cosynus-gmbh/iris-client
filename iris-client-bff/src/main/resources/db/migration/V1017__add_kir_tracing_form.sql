@@ -7,7 +7,7 @@ CREATE TABLE kir_tracing_form (
     target_disease varchar(50) NOT NULL,
     person_mobile_phone varchar(100) NULL,
 	srp_salt varchar(512) NULL,
-    srp_verifier varchar(512) NULL,
+    srp_verifier TEXT NULL,
     srp_session TEXT NULL,
 	created timestamp NOT NULL,
 	last_modified timestamp NOT NULL,
