@@ -47,7 +47,7 @@ public class KirTracingControllerImpl implements KirTracingController {
 
     @Override
     public KirChallengeDto challengeKir(UUID dataAuthorizationToken, String accessToken) {
-        log.debug("Start generating KIR access token (JSON-RPC interface)");
+        log.debug("Start KIR challenge (JSON-RPC interface)");
 
         if (!service.validateConnection(dataAuthorizationToken)) {
             throw new IllegalArgumentException("Unknown dataAuthorizationToken: " + dataAuthorizationToken);
@@ -55,7 +55,7 @@ public class KirTracingControllerImpl implements KirTracingController {
 
         var result = service.createChallenge(accessToken);
 
-        log.trace("Finished generating KIR access token (JSON-RPC interface)");
+        log.trace("Finished KIR challenge (JSON-RPC interface)");
 
         return result;
     }
