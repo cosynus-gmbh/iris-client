@@ -7,9 +7,11 @@ import com.googlecode.jsonrpc4j.JsonRpcParam;
 import iris.client_bff.core.validation.Base64;
 import iris.client_bff.core.validation.NoSignOfAttack;
 import iris.client_bff.core.validation.NoSignOfAttackJsonNode;
+import iris.client_bff.kir_tracing.KirTracingException;
 import iris.client_bff.vaccination_info.VaccinationInfoAnnouncementException;
 import iris.client_bff.vaccination_info.eps.InvalidPublicKeyException;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.CrossOrigin;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
@@ -24,7 +26,7 @@ public interface KirTracingController {
 
     @JsonRpcErrors({
             @JsonRpcError(exception = InvalidPublicKeyException.class, code = -32600),
-            @JsonRpcError(exception = VaccinationInfoAnnouncementException.class, code = -32603)
+            @JsonRpcError(exception = KirTracingException.class, code = -32604)
     })
     KirConnectionResultDto requestKirConnection(
             @JsonRpcParam(value = "connectionData") @Valid KirConnectionDto connectionData);

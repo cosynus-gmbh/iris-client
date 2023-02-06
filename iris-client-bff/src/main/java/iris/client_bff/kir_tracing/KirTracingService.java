@@ -230,7 +230,7 @@ public class KirTracingService {
         tracingForms.save(form);
 
         return KirChallengeDto.builder()
-                .challenge(challenge.toString(16))
+                .challenge(BigIntegerUtils.toHex(challenge))
                 .salt(form.getSrpSalt())
                 .build();
     }
