@@ -16,6 +16,8 @@ public interface KirTracingFormDataMapper {
 
 
 
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
     KirTracingForm toEntity(KirTracingFormDto formDto);
 
     KirTracingForm.Person toEntity(KirTracingFormDto.PersonDto personDto);

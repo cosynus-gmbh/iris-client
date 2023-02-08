@@ -229,6 +229,18 @@ export const routes: Array<RouteConfig> = [
       ),
   },
   {
+    path: "/kir-tracing-entry/list",
+    name: "kir-tracing-entry-list" /* Caution: This acts as an identifier! */,
+    meta: {
+      menu: true,
+      menuName: "KIR",
+    },
+    component: () =>
+      import(
+        /* webpackChunkName: "kir-tracing-entry-list" */ "../modules/kir-tracing/views/list/kir-tracing-entry-list.view.vue"
+      ),
+  },
+  {
     path: "/about",
     name: "about" /* Caution: This acts as an identifier! */,
     meta: {

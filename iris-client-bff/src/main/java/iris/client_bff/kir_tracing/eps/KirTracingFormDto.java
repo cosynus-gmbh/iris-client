@@ -11,13 +11,17 @@ import lombok.ToString;
 import org.springframework.validation.annotation.Validated;
 
 import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
+import javax.validation.constraints.NotBlank;
+import java.time.Instant;
 
 @Data
 @Validated
 @ToString
 @Builder
 public class KirTracingFormDto {
+
+    @NoSignOfAttack
+    private String id;
 
     @Valid
     private PersonDto person;
@@ -32,11 +36,13 @@ public class KirTracingFormDto {
     @NoSignOfAttackJsonNode
     private JsonNode therapyResults;
 
+    private Instant createdAt;
+
     @Data
     @Validated
     public static class PersonDto {
 
-        @NotNull
+        @NotBlank(message = "api.constraints.person_mobilePhone")
         @DefuseJsonString(maxLength = 100, payload = AttackDetector.Phone.class)
         private String mobilePhone;
 

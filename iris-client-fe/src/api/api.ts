@@ -2031,6 +2031,32 @@ export interface MfaVerification {
   otp: string;
 }
 
+export enum KirTracingDisease {
+  COVID_19 = "COVID_19",
+}
+
+export enum KirTracingStatus {
+  NEW = "NEW",
+  PERSON_CONTACTED = "PERSON_CONTACTED",
+  DATA_CHANGED = "DATA_CHANGED",
+  THERAPY_RESULTS_RECEIVED = "THERAPY_RESULTS_RECEIVED",
+  DONE = "DONE",
+}
+
+export interface KirTracingEntry {
+  id?: string;
+  person: KirTracingPerson;
+  status: KirTracingStatus;
+  targetDisease: KirTracingDisease;
+  assessment?: Record<string, unknown>;
+  therapyResults?: Record<string, unknown>;
+  createdAt?: string;
+}
+
+export interface KirTracingPerson {
+  mobilePhone: string;
+}
+
 /**
  * IrisClientFrontendApi - object-oriented interface
  * @export
@@ -2568,6 +2594,18 @@ export class IrisClientFrontendApi extends BaseAPI {
     assertParamExists("vaccinationReportDetailsGet", "id", id);
     const path = `/vaccination-reports/${encodeURIComponent(id)}`;
     return this.apiRequest("GET", path, null, options);
+  }
+
+  /**
+   * @summary Fetches kir tracing entries
+   * @param {*} [options] Override http request option.
+   * @throws {RequiredError}
+   * @memberof IrisClientFrontendApi
+   */
+  public kirTracingEntriesGet(
+    options?: RequestOptions
+  ): ApiResponse<Page<KirTracingEntry>> {
+    return this.apiRequest("GET", "/kir-tracing", null, options);
   }
 
   /**
