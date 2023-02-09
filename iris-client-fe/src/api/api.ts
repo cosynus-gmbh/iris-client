@@ -2043,18 +2043,88 @@ export enum KirTracingStatus {
   DONE = "DONE",
 }
 
-export interface KirTracingEntry {
+export enum EditableKirTracingStatus {
+  PERSON_CONTACTED = "PERSON_CONTACTED",
+  DATA_CHANGED = "DATA_CHANGED",
+  DONE = "DONE",
+}
+
+export interface KirTracingEntryUpdate {
+  status: KirTracingStatus;
+}
+
+export interface KirTracingEntry<
+  D extends KirTracingDisease = KirTracingDisease
+> {
   id?: string;
   person: KirTracingPerson;
   status: KirTracingStatus;
-  targetDisease: KirTracingDisease;
-  assessment?: Record<string, unknown>;
+  targetDisease: D;
+  assessment?: Partial<KirTracingAssessment[D]>;
   therapyResults?: Record<string, unknown>;
   createdAt?: string;
 }
 
 export interface KirTracingPerson {
   mobilePhone: string;
+}
+
+export interface KirTracingAssessment {
+  [KirTracingDisease.COVID_19]: KirTracingAssessmentCovid19;
+}
+
+export type YesNo = "1" | "0";
+
+export interface KirTracingAssessmentCovid19 {
+  virusDetection: {
+    method: "pcr" | "antigen";
+    date: "string";
+  };
+  symptoms: {
+    fluLike: YesNo;
+    occurrence: Partial<
+      [
+        "cough",
+        "cold",
+        "fever",
+        "headache",
+        "breathlessness",
+        "weakness",
+        "lossOfSmellOrTaste",
+        "others"
+      ]
+    >;
+    occurrence_others: "string";
+    date: "string";
+  };
+  immuneStatus?: {
+    vaccinationCount: "0" | "1" | "2" | "3" | "4" | "gt4";
+    infection: YesNo;
+    infection_dates?: [{ value: string }];
+  };
+  risk?: {
+    age: "lt30" | "30-49" | "50-59" | "60-69" | "70-79" | "gte80";
+    chronicDisease: YesNo;
+    chronicDisease_details?: string;
+    drugsImmune: YesNo;
+    kidneyDisease: YesNo;
+    kidneyDisease_dialysis?: YesNo;
+    trisomy: YesNo;
+    fat: YesNo;
+    hiv: YesNo;
+    diseases: Partial<
+      ["cardiovascular", "lung", "diabetes", "liver", "neurological"]
+    >;
+    neurological_details?: string;
+    drugs: YesNo;
+    drugs_details?: string;
+  };
+  medicalCare?: {
+    familyDoctorInformed: "supervised" | "notInformed" | "noFamilyDoctor";
+    medicalTherapy: "informed" | "notInformed" | "unobtainable";
+    interest: YesNo;
+    interest_phone?: string;
+  };
 }
 
 /**
@@ -2606,6 +2676,58 @@ export class IrisClientFrontendApi extends BaseAPI {
     options?: RequestOptions
   ): ApiResponse<Page<KirTracingEntry>> {
     return this.apiRequest("GET", "/kir-tracing", null, options);
+  }
+
+  /**
+   * @summary Fetches kir tracing entry details
+   * @param {string} entryId
+   * @param {*} [options] Override http request option.
+   * @throws {RequiredError}
+   * @memberof IrisClientFrontendApi
+   */
+  public kirTracingEntryDetailsGet(
+    entryId: string,
+    options?: RequestOptions
+  ): ApiResponse<KirTracingEntry> {
+    assertParamExists("kirTracingEntryDetailsGet", "entryId", entryId);
+    const path = `/kir-tracing/${encodeURIComponent(entryId)}`;
+    return this.apiRequest("GET", path, null, options);
+  }
+
+  /**
+   * @summary Patches kir tracing entry (changing status)
+   * @param {string} entryId
+   * @param {KirTracingEntryUpdate} data
+   * @param {*} [options] Override http request option.
+   * @throws {RequiredError}
+   * @memberof IrisClientFrontendApi
+   */
+  public kirTracingEntryPatch(
+    entryId: string,
+    data: KirTracingEntryUpdate,
+    options?: RequestOptions
+  ): ApiResponse<KirTracingEntry> {
+    assertParamExists("kirTracingEntryPatch", "entryId", entryId);
+    assertParamExists("kirTracingEntryPatch", "data", data);
+    const path = `/kir-tracing/${encodeURIComponent(entryId)}`;
+    return this.apiRequest("PATCH", path, data, options);
+  }
+
+  /**
+   * @summary Fetches unsubmitted kir tracing entry count
+   * @param {*} [options] Override http request option.
+   * @throws {RequiredError}
+   * @memberof IrisClientFrontendApi
+   */
+  public kirTracingEntriesCountUnsubmitted(
+    options?: RequestOptions
+  ): ApiResponse<number> {
+    return this.apiRequest(
+      "GET",
+      "/kir-tracing/count/unsubmitted",
+      null,
+      options
+    );
   }
 
   /**

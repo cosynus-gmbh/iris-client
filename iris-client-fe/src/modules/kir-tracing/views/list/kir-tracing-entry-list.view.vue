@@ -1,6 +1,10 @@
 <template>
   <v-card class="my-7">
     <v-card-title>Kontakt Infizierte Risikogruppen</v-card-title>
+    <v-card-subtitle v-if="fetchCount.state.result > 0">
+      {{ fetchCount.state.result }} Personen haben das Formular ausgefüllt,
+      jedoch nicht abgesendet.
+    </v-card-subtitle>
     <v-card-text>
       <data-query-handler
         @update:query="handleQueryUpdate"
@@ -50,7 +54,9 @@ import { DataQuery } from "@/api/common";
 export default class KirTracingEntryListView extends Vue {
   tableHeaders = getKirTracingEntryTableHeaders();
   fetchPage = kirTracingApi.fetchPageTracingEntry();
+  fetchCount = kirTracingApi.fetchUnsubmittedTracingEntryCount();
   handleQueryUpdate(newValue: DataQuery) {
+    this.fetchCount.execute();
     if (newValue) {
       this.fetchPage.execute(newValue);
     } else {
@@ -64,12 +70,12 @@ export default class KirTracingEntryListView extends Vue {
     return this.fetchPage.state.result?.totalElements;
   }
   handleRowClick(row: { id?: string }) {
-    // if (row.id) {
-    //   this.$router.push({
-    //     name: "vaccination-report-details",
-    //     params: { id: row.id },
-    //   });
-    // }
+    if (row.id) {
+      this.$router.push({
+        name: "kir-tracing-entry-details",
+        params: { id: row.id },
+      });
+    }
   }
 }
 </script>

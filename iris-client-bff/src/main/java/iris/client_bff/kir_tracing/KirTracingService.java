@@ -197,10 +197,21 @@ public class KirTracingService {
                 .hitCount());
     }
 
+    public Optional<KirTracingForm> findById(KirTracingForm.KirTracingFormIdentifier formId) {
+        return tracingForms.findById(formId);
+    }
+
     public Page<KirTracingForm> getAll(Pageable pageable) {
-
         return tracingForms.findAll(pageable);
+    }
 
+    public Page<KirTracingForm> findAllByPersonNotNull(Pageable pageable) {
+        return tracingForms.findAllByPersonNotNull(pageable);
+
+    }
+
+    public Integer countUnsubmittedKirTracingForms() {
+        return tracingForms.countAllByPersonNull();
     }
 
     public KirFormSubmissionResultDto generateAccessToken() {

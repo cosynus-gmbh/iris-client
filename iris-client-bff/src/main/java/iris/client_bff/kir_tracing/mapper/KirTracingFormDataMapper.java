@@ -14,10 +14,6 @@ import java.util.UUID;
 @Mapper(config = MapStructCentralConfig.class, imports = UUID.class)
 public interface KirTracingFormDataMapper {
 
-
-
-    @Mapping(target = "id", ignore = true)
-    @Mapping(target = "createdAt", ignore = true)
     KirTracingForm toEntity(KirTracingFormDto formDto);
 
     KirTracingForm.Person toEntity(KirTracingFormDto.PersonDto personDto);
