@@ -31,18 +31,23 @@ export const getFormattedDate = (
 };
 
 export const getRelativeTime = (
-  date?: string | Date,
-  prefix?: string[],
-  format?: string,
-  defaultValue?: string
+  date: string | Date | undefined,
+  options?: {
+    prefix?: [string | undefined, string | undefined];
+    format?: string;
+    defaultValue?: string;
+    maxDiff?: number;
+  }
 ) => {
+  const { prefix, format, defaultValue, maxDiff } = options ?? {};
   const formattedDate = getFormattedDate(date, format, defaultValue);
   if (date && dayjs(date).isValid()) {
     const d = dayjs(date);
-    if (dayjs().diff(d, "days") < 1) {
-      return join([prefix?.[0], d.fromNow()], " ");
+    const diff = maxDiff ?? -1;
+    if (diff >= 0 && dayjs().diff(d, "days") >= diff) {
+      return join([prefix?.[1], formattedDate], " ");
     }
-    return join([prefix?.[1], formattedDate], " ");
+    return join([prefix?.[0], d.fromNow()], " ");
   }
   return formattedDate;
 };

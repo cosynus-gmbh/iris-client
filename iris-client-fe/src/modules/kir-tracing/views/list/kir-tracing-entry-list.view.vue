@@ -23,7 +23,11 @@
           :server-items-length="totalElements"
           @click:row="handleRowClick"
           data-test="view.data-table"
-        />
+        >
+          <template #item.status="{ item }">
+            <status-chip :mapper="kirTracingConstants" :status="item.status" />
+          </template>
+        </sortable-data-table>
         <error-message-alert :errors="fetchPage.state.error" />
       </data-query-handler>
     </v-card-text>
@@ -42,9 +46,12 @@ import {
 } from "@/modules/kir-tracing/services/mappedData";
 import { kirTracingApi } from "@/modules/kir-tracing/services/api";
 import { DataQuery } from "@/api/common";
+import StatusChip from "@/components/status-chip.vue";
+import kirTracingConstants from "@/modules/kir-tracing/services/constants";
 
 @Component({
   components: {
+    StatusChip,
     ErrorMessageAlert,
     SortableDataTable,
     SearchField,
@@ -55,6 +62,7 @@ export default class KirTracingEntryListView extends Vue {
   tableHeaders = getKirTracingEntryTableHeaders();
   fetchPage = kirTracingApi.fetchPageTracingEntry();
   fetchCount = kirTracingApi.fetchUnsubmittedTracingEntryCount();
+  kirTracingConstants = kirTracingConstants;
   handleQueryUpdate(newValue: DataQuery) {
     this.fetchCount.execute();
     if (newValue) {

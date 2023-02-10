@@ -28,7 +28,7 @@ export const getKirTracingEntryTableRows = (
       id: entry.id,
       person: entry.person,
       targetDisease: kirTracingConstants.getDisease(entry.targetDisease),
-      status: kirTracingConstants.getStatusName(entry.status),
+      status: entry.status,
       metadata: {
         created: getFormattedDate(entry.createdAt, "L LT"),
       },

@@ -6,7 +6,14 @@
         <span v-if="row[1]">
           von <strong>{{ row[1] }}</strong>
         </span>
-        {{ getRelativeTime(row[2], ["", "am"], "L LT", "") }}
+        {{
+          getRelativeTime(row[2], {
+            prefix: ["", "am"],
+            format: "L LT",
+            defaultValue: "",
+            maxDiff: 1,
+          })
+        }}
       </span>
     </template>
   </div>

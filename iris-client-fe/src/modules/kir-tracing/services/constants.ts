@@ -7,8 +7,8 @@ import {
 import { join } from "@/utils/misc";
 
 const formValueLabels: Record<string, string> = {
-  pcr: "PCR Test",
-  antigen: "Antigen Test",
+  pcr: "PCR",
+  antigen: "Antigentest",
   0: "Nein",
   1: "Ja",
   cough: "Husten",
@@ -19,7 +19,8 @@ const formValueLabels: Record<string, string> = {
   weakness: "Schwächegefühl oder Unwohlsein",
   lossOfSmellOrTaste: "Geruchs- oder Geschmacksverlust",
   others: "Andere",
-  gt4: "Mehr als 4",
+  "vaccinationCount.0": "Keine",
+  "vaccinationCount.gt4": "Mehr als 4",
   lt30: "Unter 30 Jahre",
   "30-49": "30 bis 49",
   "50-59": "50 bis 59",
@@ -75,9 +76,9 @@ const getStatusButtonLabel = (status?: string): string => {
     case EditableKirTracingStatus.DONE:
       return "Fall abgeschlossen";
     case EditableKirTracingStatus.DATA_CHANGED:
-      return "Daten wurden geändert";
+      return "Daten geändert";
     case EditableKirTracingStatus.PERSON_CONTACTED:
-      return "Person wurde kontaktiert";
+      return "Person kontaktiert";
     default:
       return "Unbekannt";
   }

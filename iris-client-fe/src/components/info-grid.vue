@@ -10,7 +10,7 @@
         <p class="mb-0">
           <strong> {{ title }}: </strong>
         </p>
-        <template v-if="info.length > 0">
+        <template v-if="info && info.length > 0">
           <template v-if="Array.isArray(info)">
             <span
               class="d-block"

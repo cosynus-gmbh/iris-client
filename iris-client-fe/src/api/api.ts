@@ -2060,7 +2060,7 @@ export interface KirTracingEntry<
   person: KirTracingPerson;
   status: KirTracingStatus;
   targetDisease: D;
-  assessment?: Partial<KirTracingAssessment[D]>;
+  assessment?: KirTracingAssessment[D];
   therapyResults?: Record<string, unknown>;
   createdAt?: string;
 }
@@ -2070,17 +2070,17 @@ export interface KirTracingPerson {
 }
 
 export interface KirTracingAssessment {
-  [KirTracingDisease.COVID_19]: KirTracingAssessmentCovid19;
+  [KirTracingDisease.COVID_19]: Partial<KirTracingAssessmentCovid19>;
 }
 
 export type YesNo = "1" | "0";
 
 export interface KirTracingAssessmentCovid19 {
-  virusDetection: {
+  virusDetection: Partial<{
     method: "pcr" | "antigen";
     date: "string";
-  };
-  symptoms: {
+  }>;
+  symptoms: Partial<{
     fluLike: YesNo;
     occurrence: Partial<
       [
@@ -2096,13 +2096,13 @@ export interface KirTracingAssessmentCovid19 {
     >;
     occurrence_others: "string";
     date: "string";
-  };
-  immuneStatus?: {
+  }>;
+  immuneStatus?: Partial<{
     vaccinationCount: "0" | "1" | "2" | "3" | "4" | "gt4";
     infection: YesNo;
     infection_dates?: [{ value: string }];
-  };
-  risk?: {
+  }>;
+  risk?: Partial<{
     age: "lt30" | "30-49" | "50-59" | "60-69" | "70-79" | "gte80";
     chronicDisease: YesNo;
     chronicDisease_details?: string;
@@ -2118,13 +2118,13 @@ export interface KirTracingAssessmentCovid19 {
     neurological_details?: string;
     drugs: YesNo;
     drugs_details?: string;
-  };
-  medicalCare?: {
+  }>;
+  medicalCare?: Partial<{
     familyDoctorInformed: "supervised" | "notInformed" | "noFamilyDoctor";
     medicalTherapy: "informed" | "notInformed" | "unobtainable";
     interest: YesNo;
     interest_phone?: string;
-  };
+  }>;
 }
 
 /**
