@@ -63,25 +63,37 @@ public interface KirTracingController {
             @JsonRpcParam(value = "form") @NoSignOfAttackJsonNode @NotNull @Valid JsonNode therapyResults
     );
 
+    KirFormSubmissionStatusDto getKirFormSubmissionStatus(
+            @JsonRpcParam(value = "dataAuthorizationToken") @NotNull UUID dataAuthorizationToken,
+            @JsonRpcParam(value = "a") @NotNull String a,
+            @JsonRpcParam(value = "m1") @NotNull String m1,
+            @JsonRpcParam(value = "accessToken") @NotNull @NoSignOfAttack String accessToken
+    );
+
 
     // DTOs Announcement
     record KirConnectionDto(
-            @NotBlank @Base64 @NoSignOfAttack String submitterPublicKey) {
-    }
+            @NotBlank @Base64 @NoSignOfAttack String submitterPublicKey
+    ) {}
 
     record KirConnectionResultDto(
             @NotBlank String hdPublicKey,
             @NotBlank String iv,
-            @NotBlank String tokens) {
-    }
+            @NotBlank String tokens
+    ) {}
 
     record KirFormSubmissionResultDto(
             @NotBlank String accessToken
-    ) {
-    }
+    ) {}
 
     record KirAuthorizationResponseDto(
             @NotBlank String M2
-    ){}
+    ) {}
+
+    record KirFormSubmissionStatusDto(
+            @NotBlank String createdAt,
+            @NotNull Boolean hasAssessment,
+            @NotNull Boolean hasTherapyResults
+    ) {}
 
 }

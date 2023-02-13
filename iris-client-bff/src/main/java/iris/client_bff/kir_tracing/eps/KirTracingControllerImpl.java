@@ -95,6 +95,24 @@ public class KirTracingControllerImpl implements KirTracingController {
     }
 
     @Override
+    public KirFormSubmissionStatusDto getKirFormSubmissionStatus(UUID dataAuthorizationToken, String a, String m1, String accessToken) {
+
+        log.debug("Start getting KIR form submission status (JSON-RPC interface)");
+
+        if (!service.validateConnection(dataAuthorizationToken)) {
+            throw new IllegalArgumentException("Unknown dataAuthorizationToken: " + dataAuthorizationToken);
+        }
+
+        SRP6ClientCredentials credentials = new SRP6ClientCredentials(BigIntegerUtils.fromHex(a), BigIntegerUtils.fromHex(m1));
+
+        var result = service.getKirFormSubmissionStatus(credentials, accessToken);
+
+        log.trace("Finish getting KIR form submission status (JSON-RPC interface)");
+
+        return result;
+    }
+
+    @Override
     public KirAuthorizationResponseDto authorizeKir(UUID dataAuthorizationToken, String a, String m1, String accessToken) {
         log.debug("Start authorizing kir user (JSON-RPC interface)");
 

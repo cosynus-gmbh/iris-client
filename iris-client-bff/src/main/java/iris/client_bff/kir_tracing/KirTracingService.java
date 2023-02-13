@@ -14,6 +14,7 @@ import iris.client_bff.kir_tracing.eps.KirTracingController.KirAuthorizationResp
 import iris.client_bff.kir_tracing.eps.KirTracingController.KirConnectionDto;
 import iris.client_bff.kir_tracing.eps.KirTracingController.KirConnectionResultDto;
 import iris.client_bff.kir_tracing.eps.KirTracingController.KirFormSubmissionResultDto;
+import iris.client_bff.kir_tracing.eps.KirTracingController.KirFormSubmissionStatusDto;
 import iris.client_bff.kir_tracing.eps.KirTracingFormDto;
 import iris.client_bff.kir_tracing.mapper.KirTracingFormDataMapper;
 import iris.client_bff.kir_tracing.web.KirTracingFormStatusUpdateDto;
@@ -167,6 +168,17 @@ public class KirTracingService {
         tracingForms.save(form);
 
         return new KirFormSubmissionResultDto(accessToken);
+    }
+
+    public KirFormSubmissionStatusDto getKirFormSubmissionStatus(SRP6ClientCredentials credentials, String accessToken) {
+        KirTracingForm form = authorize(credentials, accessToken).form;
+        String assessment = form.getAssessment();
+        String therapyResults = form.getTherapyResults();
+        return new KirFormSubmissionStatusDto(
+                form.getCreatedAt().toString(),
+                (assessment != null && !assessment.isEmpty()),
+                (therapyResults != null && !therapyResults.isEmpty())
+        );
     }
 
     public KirAuthorizationResponseDto authorizeKir(SRP6ClientCredentials credentials, String accessToken) {
