@@ -40,6 +40,10 @@ const formValueLabels: Record<string, string> = {
   "medicalTherapy.notInformed": "Nein, Patient weiß nichts darüber",
   "medicalTherapy.unobtainable":
     "Patient weiß von dem Medikament, weiß aber nicht, wie er/sie dieses erhalten kann",
+  "treatment_location.familyDoctor": "Hausarzt/Hausärztin",
+  "treatment_location.specialist": "Bei einem Facharzt/einer Fachärztin",
+  "treatment_location.healthDepartment": "Im Gesundheitsamt",
+  "treatment_location.hospital": "Im Krankenhaus",
 };
 
 const valueLabel = (

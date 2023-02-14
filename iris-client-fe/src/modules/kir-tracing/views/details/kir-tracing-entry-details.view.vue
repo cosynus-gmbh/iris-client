@@ -18,15 +18,16 @@
         </v-col>
       </v-row>
       <v-divider class="my-4" />
-      <v-tabs @change="handleTabsChange">
+      <v-tabs v-model="currentTab" @change="handleTabsChange">
         <v-tab>Bewertungsbogen</v-tab>
         <v-tab>Therapieergebnisse</v-tab>
       </v-tabs>
       <v-tabs-items v-model="currentTab" class="mt-4">
         <v-tab-item>
-          <kir-tracing-entry-assessment-covid19
-            :tracing-entry="kirTracingEntry"
-          />
+          <kir-tracing-entry-assessment :tracing-entry="kirTracingEntry" />
+        </v-tab-item>
+        <v-tab-item>
+          <kir-tracing-entry-therapy-results :tracing-entry="kirTracingEntry" />
         </v-tab-item>
       </v-tabs-items>
       <error-message-alert :errors="errorMessages" />
@@ -59,11 +60,13 @@ import { getApiErrorMessages, getApiLoading } from "@/utils/api";
 import kirTracingConstants from "@/modules/kir-tracing/services/constants";
 import InfoList from "@/components/info-list.vue";
 import StatusChip from "@/components/status-chip.vue";
-import KirTracingEntryAssessmentCovid19 from "@/modules/kir-tracing/views/details/components/kir-tracing-entry-assessment.covid19.vue";
+import KirTracingEntryAssessment from "@/modules/kir-tracing/views/details/components/kir-tracing-entry-assessment.vue";
+import KirTracingEntryTherapyResults from "@/modules/kir-tracing/views/details/components/kir-tracing-entry-therapy-results.vue";
 
 @Component({
   components: {
-    KirTracingEntryAssessmentCovid19,
+    KirTracingEntryAssessment,
+    KirTracingEntryTherapyResults,
     StatusChip,
     InfoList,
     KirTracingEntryStatusChange,

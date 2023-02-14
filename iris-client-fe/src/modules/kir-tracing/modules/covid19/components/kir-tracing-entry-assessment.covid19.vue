@@ -49,7 +49,9 @@ import InfoList from "@/components/info-list.vue";
 const KirTracingEntryAssessmentCovid19Props = Vue.extend({
   props: {
     tracingEntry: {
-      type: Object as PropType<KirTracingEntry<KirTracingDisease.COVID_19>>,
+      type: Object as PropType<
+        KirTracingEntry<KirTracingDisease.COVID_19> | undefined
+      >,
       default: null,
     },
   },
@@ -58,13 +60,6 @@ const KirTracingEntryAssessmentCovid19Props = Vue.extend({
   components: { InfoList, BtnToggleSelect },
 })
 export default class KirTracingEntryAssessmentCovid19 extends KirTracingEntryAssessmentCovid19Props {
-  get reportInfo() {
-    return [
-      [["Kontakt", this.tracingEntry?.person.mobilePhone]],
-      [["Meldung vom", getFormattedDate(this.tracingEntry?.createdAt)]],
-    ];
-  }
-
   get virusDetection() {
     const data = this.tracingEntry?.assessment?.virusDetection;
     return [

@@ -2061,7 +2061,7 @@ export interface KirTracingEntry<
   status: KirTracingStatus;
   targetDisease: D;
   assessment?: KirTracingAssessment[D];
-  therapyResults?: Record<string, unknown>;
+  therapyResults?: KirTracingTherapyResults[D];
   createdAt?: string;
 }
 
@@ -2069,11 +2069,11 @@ export interface KirTracingPerson {
   mobilePhone: string;
 }
 
+export type YesNo = "1" | "0";
+
 export interface KirTracingAssessment {
   [KirTracingDisease.COVID_19]: Partial<KirTracingAssessmentCovid19>;
 }
-
-export type YesNo = "1" | "0";
 
 export interface KirTracingAssessmentCovid19 {
   virusDetection: Partial<{
@@ -2097,12 +2097,12 @@ export interface KirTracingAssessmentCovid19 {
     occurrence_others: "string";
     date: "string";
   }>;
-  immuneStatus?: Partial<{
+  immuneStatus: Partial<{
     vaccinationCount: "0" | "1" | "2" | "3" | "4" | "gt4";
     infection: YesNo;
     infection_dates?: [{ value: string }];
   }>;
-  risk?: Partial<{
+  risk: Partial<{
     age: "lt30" | "30-49" | "50-59" | "60-69" | "70-79" | "gte80";
     chronicDisease: YesNo;
     chronicDisease_details?: string;
@@ -2119,11 +2119,47 @@ export interface KirTracingAssessmentCovid19 {
     drugs: YesNo;
     drugs_details?: string;
   }>;
-  medicalCare?: Partial<{
+  medicalCare: Partial<{
     familyDoctorInformed: "supervised" | "notInformed" | "noFamilyDoctor";
     medicalTherapy: "informed" | "notInformed" | "unobtainable";
     interest: YesNo;
     interest_phone?: string;
+  }>;
+}
+
+export interface KirTracingTherapyResults {
+  [KirTracingDisease.COVID_19]: Partial<KirTracingTherapyResultsCovid19>;
+}
+
+export interface KirTracingTherapyResultsCovid19 {
+  medicalCare: Partial<{
+    treatment: YesNo;
+    treatment_location?: Partial<
+      ["familyDoctor", "specialist", "healthDepartment", "hospital"]
+    >;
+    hospital_inpatient?: YesNo;
+    hospital_inpatient_duration?: string;
+    hospital_icu?: YesNo;
+    hospital_oxygen?: YesNo;
+  }>;
+  paxlovid: Partial<{
+    medication: YesNo;
+    medication_startDate?: string;
+    prescription?: "familyDoctor" | "healthDepartment" | "others";
+    prescription_others?: string;
+    noMedication?:
+      | "patientDeclined"
+      | "notRecommended"
+      | "noPrescription"
+      | "others";
+    noMedication_others?: string;
+    symptoms_endDate: string;
+  }>;
+  feedback: Partial<{
+    satisfiedWithMedicalCare: YesNo;
+    satisfiedWithHealthDepartment: YesNo;
+    betterInformedByApp: YesNo;
+    suggestionsOrFeedback: string;
   }>;
 }
 
