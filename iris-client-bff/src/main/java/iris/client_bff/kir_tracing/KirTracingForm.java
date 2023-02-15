@@ -6,13 +6,12 @@ import iris.client_bff.core.model.IdWithUuid;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.hibernate.search.engine.backend.types.Searchable;
 import org.hibernate.search.engine.backend.types.Sortable;
-import org.hibernate.search.mapper.pojo.mapping.definition.annotation.FullTextField;
-import org.hibernate.search.mapper.pojo.mapping.definition.annotation.GenericField;
-import org.hibernate.search.mapper.pojo.mapping.definition.annotation.Indexed;
-import org.hibernate.search.mapper.pojo.mapping.definition.annotation.IndexedEmbedded;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.*;
 
 import javax.persistence.*;
+import java.time.Instant;
 import java.util.UUID;
 
 /**
@@ -64,6 +63,23 @@ public class KirTracingForm extends Aggregate<KirTracingForm, KirTracingForm.Kir
     @GenericField(sortable = Sortable.YES)
     @Builder.Default
     private Disease targetDisease = Disease.COVID_19;
+
+    @Column
+    @Builder.Default
+    @GenericField(sortable = Sortable.YES, searchable = Searchable.YES)
+    private Instant deletedAt = null;
+
+    public KirTracingForm markDeleted() {
+        setDeletedAt(Instant.now());
+        setSrpSalt(null);
+        setSrpVerifier(null);
+        setSrpSession(null);
+        // maybe clear accessToken as well?
+        setTherapyResults("");
+        setAssessment("");
+        setPerson(Person.builder().mobilePhone(getId().toString()).build());
+        return this;
+    }
 
     @EqualsAndHashCode(callSuper = false)
     @RequiredArgsConstructor(staticName = "of")

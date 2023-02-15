@@ -7,10 +7,8 @@ import com.nimbusds.srp6.SRP6ServerSession;
 import iris.client_bff.config.SrpParamsConfig;
 import iris.client_bff.core.alert.AlertService;
 import iris.client_bff.core.database.HibernateSearcher;
-import iris.client_bff.events.EventDataRequest;
 import iris.client_bff.kir_tracing.IncomingKirConnection.IncomingKirConnectionIdentifier;
 import iris.client_bff.kir_tracing.eps.KirChallengeDto;
-import iris.client_bff.kir_tracing.eps.KirTracingController;
 import iris.client_bff.kir_tracing.eps.KirTracingController.KirAuthorizationResponseDto;
 import iris.client_bff.kir_tracing.eps.KirTracingController.KirConnectionDto;
 import iris.client_bff.kir_tracing.eps.KirTracingController.KirConnectionResultDto;
@@ -26,6 +24,8 @@ import iris.client_bff.vaccination_info.eps.VaccinationInfoController;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.hibernate.search.engine.search.predicate.dsl.PredicateFinalStep;
+import org.hibernate.search.engine.search.predicate.dsl.SearchPredicateFactory;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.ConstructorBinding;
 import org.springframework.data.domain.Page;
@@ -143,7 +143,7 @@ public class KirTracingService {
 
     public KirFormSubmissionResultDto submitKirTracingForm(String srpSalt, String srpVerifier, String accessToken, KirTracingFormDto form) {
 
-        KirTracingForm targetForm = tracingForms.findByAccessToken(accessToken)
+        KirTracingForm targetForm = tracingForms.findByAccessTokenAndDeletedAtIsNull(accessToken)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid credentials"));
 
         mapper.update(targetForm, form);
@@ -187,7 +187,7 @@ public class KirTracingService {
     }
 
     private AuthorizationResult authorize(SRP6ClientCredentials credentials, String accessToken) {
-        KirTracingForm form = tracingForms.findByAccessToken(accessToken)
+        KirTracingForm form = tracingForms.findByAccessTokenAndDeletedAtIsNull(accessToken)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid credentials"));
 
         SRP6ServerSession srpValidator = form.getSrpServerSession();
@@ -202,12 +202,21 @@ public class KirTracingService {
         }
     }
 
+    private PredicateFinalStep createSearchQuery(KirTracingForm.Status status, SearchPredicateFactory f) {
+        var boolPred = f.bool();
+        boolPred.mustNot(f2 -> f2.exists().field("deletedAt"));
+        if (status != null) {
+            boolPred.must(f2 -> f2.match().field("status").matching(status));
+        }
+        return boolPred;
+    }
+
     public Page<KirTracingForm> search(KirTracingForm.Status status, String searchString, Pageable pageable) {
         var result = searcher.search(
                 searchString,
                 pageable,
                 FIELDS,
-                it -> status != null ? it.must(f2 -> f2.match().field("status").matching(status)) : it,
+                it -> it.must(f -> createSearchQuery(status, f)),
                 KirTracingForm.class
         );
         return new PageImpl<>(result.hits(), pageable, result.total().hitCount());
@@ -221,20 +230,24 @@ public class KirTracingService {
         return tracingForms.findById(formId);
     }
 
-    public Page<KirTracingForm> getAll(Pageable pageable) {
-        return tracingForms.findAll(pageable);
+    public void deleteById(KirTracingForm.KirTracingFormIdentifier formId) {
+        tracingForms.findById(formId)
+                .ifPresent(form -> {
+                    log.info("Delete KirTracingForm: {}", formId);
+                    tracingForms.save(form.markDeleted());
+                });
     }
 
     public Page<KirTracingForm> findAllByPersonNotNull(Pageable pageable) {
-        return tracingForms.findAllByPersonNotNull(pageable);
+        return tracingForms.findAllByPersonNotNullAndDeletedAtIsNull(pageable);
     }
 
     public Page<KirTracingForm> findByStatus(KirTracingForm.Status status, Pageable pageable) {
-        return tracingForms.findAllByStatusAndPersonNotNull(status, pageable);
+        return tracingForms.findAllByStatusAndPersonNotNullAndDeletedAtIsNull(status, pageable);
     }
 
     public Integer countUnsubmittedKirTracingForms() {
-        return tracingForms.countAllByPersonNull();
+        return tracingForms.countAllByPersonNullAndDeletedAtIsNull();
     }
 
     public KirFormSubmissionResultDto generateAccessToken() {
@@ -248,7 +261,7 @@ public class KirTracingService {
 
     public KirChallengeDto createChallenge(String accessToken) {
 
-        KirTracingForm form = tracingForms.findByAccessToken(accessToken)
+        KirTracingForm form = tracingForms.findByAccessTokenAndDeletedAtIsNull(accessToken)
                 .orElseThrow(() -> new InvalidParameterException("Invalid access token"));
 
         if (form.getSrpSalt()

@@ -54,6 +54,12 @@ public class KirTracingController {
 				.orElseGet(ResponseEntity.notFound()::build);
 	}
 
+	@DeleteMapping("/{formId}")
+	public ResponseEntity<?> delete(@PathVariable KirTracingForm.KirTracingFormIdentifier formId) {
+		service.deleteById(formId);
+		return ResponseEntity.ok(null);
+	}
+
 	@PatchMapping("/{formId}")
 	public ResponseEntity<KirTracingFormDto> updateKirTracingFormStatus(
 			@PathVariable UUID formId, @RequestBody @Valid @NotNull KirTracingFormStatusUpdateDto updatedStatus) {

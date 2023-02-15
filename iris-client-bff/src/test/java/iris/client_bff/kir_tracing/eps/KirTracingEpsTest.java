@@ -23,7 +23,6 @@ import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 
-import javax.validation.constraints.NotNull;
 import java.math.BigInteger;
 import java.security.GeneralSecurityException;
 import java.security.PrivateKey;
@@ -200,7 +199,7 @@ class KirTracingEpsTest {
 
         assertThat(accessToken).isNotBlank().hasSize(10);
 
-        KirTracingForm kirTracingForm = kirTracingForms.findByAccessToken(accessToken).get();
+        KirTracingForm kirTracingForm = kirTracingForms.findByAccessTokenAndDeletedAtIsNull(accessToken).get();
 
         assertEquals(kirTracingForm.getAccessToken(), accessToken);
         assertEquals(kirTracingForm.getTargetDisease(), KirTracingForm.Disease.COVID_19);
@@ -241,7 +240,7 @@ class KirTracingEpsTest {
 
         assertThat(accessToken).isNotBlank().hasSize(10);
 
-        KirTracingForm submittedFormInDb = kirTracingForms.findByAccessToken(accessToken).get();
+        KirTracingForm submittedFormInDb = kirTracingForms.findByAccessTokenAndDeletedAtIsNull(accessToken).get();
 
         assertEquals(verifier.toString(16), submittedFormInDb.getSrpVerifier());
         assertEquals(salt.toString(16), submittedFormInDb.getSrpSalt());
@@ -286,7 +285,7 @@ class KirTracingEpsTest {
 
         assertThat(challenge).isNotBlank();
 
-        KirTracingForm submittedFormInDb = kirTracingForms.findByAccessToken(initialForm.getAccessToken()).get();
+        KirTracingForm submittedFormInDb = kirTracingForms.findByAccessTokenAndDeletedAtIsNull(initialForm.getAccessToken()).get();
 
         assertEquals(verifier.toString(16), submittedFormInDb.getSrpVerifier());
         assertEquals(salt.toString(16), submittedFormInDb.getSrpSalt());
@@ -336,7 +335,7 @@ class KirTracingEpsTest {
 
         var accessToken = response.getString("result.accessToken");
 
-        KirTracingForm formResult = kirTracingForms.findByAccessToken(accessToken).get();
+        KirTracingForm formResult = kirTracingForms.findByAccessTokenAndDeletedAtIsNull(accessToken).get();
 
         assertThat(accessToken).isNotBlank().hasSize(10);
         assertEquals(accessToken, formResult.getAccessToken());

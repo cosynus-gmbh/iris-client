@@ -13,6 +13,7 @@ CREATE TABLE kir_tracing_form (
 	last_modified timestamp NOT NULL,
 	created_by uuid NULL,
 	last_modified_by uuid NULL,
+    deleted_at timestamp NULL,
 	PRIMARY KEY (id),
 	FOREIGN KEY (created_by) REFERENCES user_accounts(user_id),
 	FOREIGN KEY (last_modified_by) REFERENCES user_accounts(user_id)

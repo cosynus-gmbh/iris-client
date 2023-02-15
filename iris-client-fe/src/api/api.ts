@@ -2750,6 +2750,22 @@ export class IrisClientFrontendApi extends BaseAPI {
   }
 
   /**
+   * @summary Deletes kir tracing entry
+   * @param {string} entryId
+   * @param {*} [options] Override http request option.
+   * @throws {RequiredError}
+   * @memberof IrisClientFrontendApi
+   */
+  public kirTracingEntryDelete(
+    entryId: string,
+    options?: RequestOptions
+  ): ApiResponse {
+    assertParamExists("kirTracingEntryDelete", "entryId", entryId);
+    const path = `/kir-tracing/${encodeURIComponent(entryId)}`;
+    return this.apiRequest("DELETE", path, options);
+  }
+
+  /**
    * @summary Fetches unsubmitted kir tracing entry count
    * @param {*} [options] Override http request option.
    * @throws {RequiredError}

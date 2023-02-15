@@ -18,6 +18,13 @@ export const getKirTracingEntryTableHeaders = () => [
   { text: "Erkrankung", value: "targetDisease", sortable: true },
   { text: "Status", value: "status", sortable: true },
   { text: "Eingegangen am", value: "metadata.created", sortable: true },
+  {
+    text: "",
+    value: "actions",
+    sortable: false,
+    align: "end",
+    cellClass: "text-no-wrap",
+  },
 ];
 
 export const getKirTracingEntryTableRows = (

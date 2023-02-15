@@ -11,9 +11,9 @@ import java.util.Optional;
  */
 public interface KirTracingFormRepository extends AggregateRepository<KirTracingForm, KirTracingForm.KirTracingFormIdentifier> {
 
-    Optional<KirTracingForm> findByAccessToken(String accessToken);
-    Page<KirTracingForm> findAllByPersonNotNull(Pageable pageable);
-    Page<KirTracingForm> findAllByStatusAndPersonNotNull(KirTracingForm.Status status, Pageable pageable);
-    Integer countAllByPersonNull();
+    Optional<KirTracingForm> findByAccessTokenAndDeletedAtIsNull(String accessToken);
+    Page<KirTracingForm> findAllByPersonNotNullAndDeletedAtIsNull(Pageable pageable);
+    Page<KirTracingForm> findAllByStatusAndPersonNotNullAndDeletedAtIsNull(KirTracingForm.Status status, Pageable pageable);
+    Integer countAllByPersonNullAndDeletedAtIsNull();
 
 }

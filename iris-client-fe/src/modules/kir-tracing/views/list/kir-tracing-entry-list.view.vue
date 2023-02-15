@@ -34,8 +34,22 @@
           <template #item.status="{ item }">
             <status-chip :mapper="kirTracingConstants" :status="item.status" />
           </template>
+          <template #item.actions="{ item }">
+            <kir-tracing-entry-delete-button
+              icon
+              large
+              color="error"
+              @click="() => deleteKirTracingEntry(item.id, query)"
+              :disabled="deleteEntry.state.loading"
+              :person-phone="item.person.mobilePhone"
+              data-test="delete"
+            >
+              <v-icon> mdi-delete </v-icon>
+            </kir-tracing-entry-delete-button>
+          </template>
         </sortable-data-table>
         <error-message-alert :errors="fetchPage.state.error" />
+        <error-message-alert :errors="deleteEntry.state.error" />
       </v-card-text>
     </v-card>
   </data-query-handler>
@@ -58,9 +72,11 @@ import kirTracingConstants from "@/modules/kir-tracing/services/constants";
 import BtnToggleSelect from "@/components/btn-toggle-select.vue";
 import { getEnumKeys } from "@/utils/data";
 import { KirTracingStatus } from "@/api";
+import KirTracingEntryDeleteButton from "@/modules/kir-tracing/views/details/components/kir-tracing-entry-delete-button.vue";
 
 @Component({
   components: {
+    KirTracingEntryDeleteButton,
     BtnToggleSelect,
     StatusChip,
     ErrorMessageAlert,
@@ -73,6 +89,7 @@ export default class KirTracingEntryListView extends Vue {
   tableHeaders = getKirTracingEntryTableHeaders();
   fetchPage = kirTracingApi.fetchPageTracingEntry();
   fetchCount = kirTracingApi.fetchUnsubmittedTracingEntryCount();
+  deleteEntry = kirTracingApi.deleteTracingEntry();
   kirTracingConstants = kirTracingConstants;
   handleQueryUpdate(newValue: DataQuery) {
     this.fetchCount.execute();
@@ -81,6 +98,10 @@ export default class KirTracingEntryListView extends Vue {
     } else {
       this.fetchPage.reset(["result"]);
     }
+  }
+  async deleteKirTracingEntry(id: string, query: DataQuery) {
+    await this.deleteEntry.execute(id);
+    this.handleQueryUpdate(query);
   }
   get tableRows() {
     return getKirTracingEntryTableRows(this.fetchPage.state.result?.content);

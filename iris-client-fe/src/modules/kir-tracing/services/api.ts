@@ -38,6 +38,13 @@ const patchTracingEntry = () => {
   return asyncAction(action);
 };
 
+const deleteTracingEntry = () => {
+  const action = async (id: string) => {
+    return await authClient.kirTracingEntryDelete(id);
+  };
+  return asyncAction(action);
+};
+
 const fetchUnsubmittedTracingEntryCount = () => {
   const action = async () => {
     return (await authClient.kirTracingEntriesCountUnsubmitted()).data;
@@ -50,6 +57,7 @@ export const kirTracingApi = {
   fetchTracingEntryDetails,
   fetchUnsubmittedTracingEntryCount,
   patchTracingEntry,
+  deleteTracingEntry,
 };
 
 export const bundleKirTracingApi = apiBundleProvider(kirTracingApi);
