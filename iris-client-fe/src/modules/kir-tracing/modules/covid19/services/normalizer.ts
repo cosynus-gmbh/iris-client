@@ -201,8 +201,7 @@ export const normalizeKirTracingTherapyResultsCovid19MedicalCare = (
         hospital_inpatient: normalizer("hospital_inpatient", undefined),
         hospital_inpatient_duration: normalizer(
           "hospital_inpatient_duration",
-          undefined,
-          "number"
+          undefined
         ),
         hospital_icu: normalizer("hospital_icu", undefined),
         hospital_oxygen: normalizer("hospital_oxygen", undefined),

@@ -1,15 +1,22 @@
 <template>
-  <v-card class="my-7">
-    <v-card-title>Kontakt Infizierte Risikogruppen</v-card-title>
-    <v-card-subtitle v-if="fetchCount.state.result > 0">
-      {{ fetchCount.state.result }} Personen haben das Formular ausgefüllt,
-      jedoch nicht abgesendet.
-    </v-card-subtitle>
-    <v-card-text>
-      <data-query-handler
-        @update:query="handleQueryUpdate"
-        #default="{ query }"
-      >
+  <data-query-handler @update:query="handleQueryUpdate" #default="{ query }">
+    <v-row class="mt-4">
+      <v-col cols="12">
+        Status:
+        <btn-toggle-select
+          :select-options="statusSelectOptions"
+          data-test-key="status"
+          v-model="query.status"
+        />
+      </v-col>
+    </v-row>
+    <v-card class="my-7">
+      <v-card-title>Kontakt Infizierte Risikogruppen</v-card-title>
+      <v-card-subtitle v-if="fetchCount.state.result > 0">
+        {{ fetchCount.state.result }} Personen haben das Formular ausgefüllt,
+        jedoch nicht abgesendet.
+      </v-card-subtitle>
+      <v-card-text>
         <search-field v-model="query.search" />
         <sortable-data-table
           class="mt-5"
@@ -29,9 +36,9 @@
           </template>
         </sortable-data-table>
         <error-message-alert :errors="fetchPage.state.error" />
-      </data-query-handler>
-    </v-card-text>
-  </v-card>
+      </v-card-text>
+    </v-card>
+  </data-query-handler>
 </template>
 
 <script lang="ts">
@@ -48,9 +55,13 @@ import { kirTracingApi } from "@/modules/kir-tracing/services/api";
 import { DataQuery } from "@/api/common";
 import StatusChip from "@/components/status-chip.vue";
 import kirTracingConstants from "@/modules/kir-tracing/services/constants";
+import BtnToggleSelect from "@/components/btn-toggle-select.vue";
+import { getEnumKeys } from "@/utils/data";
+import { KirTracingStatus } from "@/api";
 
 @Component({
   components: {
+    BtnToggleSelect,
     StatusChip,
     ErrorMessageAlert,
     SortableDataTable,
@@ -76,6 +87,14 @@ export default class KirTracingEntryListView extends Vue {
   }
   get totalElements(): number | undefined {
     return this.fetchPage.state.result?.totalElements;
+  }
+  get statusSelectOptions() {
+    return getEnumKeys(KirTracingStatus).map((key) => {
+      return {
+        text: kirTracingConstants.getStatusName(KirTracingStatus[key]),
+        value: KirTracingStatus[key],
+      };
+    });
   }
   handleRowClick(row: { id?: string }) {
     if (row.id) {

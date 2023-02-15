@@ -32,18 +32,22 @@ const formValueLabels: Record<string, string> = {
   diabetes: "Diabetes Typ 1 oder 2",
   liver: "Lebererkrankungen",
   neurological: "Neurologisch-psychiatrische Erkrankung",
-  "familyDoctorInformed.supervised": "Ja, Patient wird medizinisch betreut",
+  "familyDoctorInformed.supervised": "Ja, Patient:in wird medizinisch betreut",
   "familyDoctorInformed.notInformed": "Nein",
   "familyDoctorInformed.noFamilyDoctor":
-    "Patient hat keinen Hausarzt/Hausärztin",
-  "medicalTherapy.informed": "Ja, Patient wurde informiert",
-  "medicalTherapy.notInformed": "Nein, Patient weiß nichts darüber",
+    "Patient:in hat keinen Hausarzt/Hausärztin",
+  "medicalTherapy.informed": "Ja, Patient:in wurde informiert",
+  "medicalTherapy.notInformed": "Nein, Patient:in weiß nichts darüber",
   "medicalTherapy.unobtainable":
-    "Patient weiß von dem Medikament, weiß aber nicht, wie er/sie dieses erhalten kann",
+    "Patient:in weiß von dem Medikament, weiß aber nicht, wie er/sie dieses erhalten kann",
   "treatment_location.familyDoctor": "Hausarzt/Hausärztin",
   "treatment_location.specialist": "Bei einem Facharzt/einer Fachärztin",
   "treatment_location.healthDepartment": "Im Gesundheitsamt",
   "treatment_location.hospital": "Im Krankenhaus",
+  "noMedication.patientDeclined": "Weil Patient:in dies nicht wollte",
+  "noMedication.notRecommended":
+    "Weil Patient:in eine Krankheit habe oder ein Medikament einnehme, bei der eine Paxlovid Einnahme nicht empfohlen wird",
+  "noMedication.noPrescription": "Weil es Patient:in nicht verschrieben wurde",
 };
 
 const valueLabel = (
@@ -55,7 +59,7 @@ const valueLabel = (
     ? formValueLabels[join([prefix, value], ".")] ??
         formValueLabels[value] ??
         value
-    : fallback ?? "-";
+    : fallback ?? "";
 };
 
 const getStatusName = (status?: string): string => {

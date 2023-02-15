@@ -6,15 +6,16 @@ import iris.client_bff.kir_tracing.eps.KirTracingFormDto;
 import iris.client_bff.kir_tracing.KirTracingService;
 import iris.client_bff.kir_tracing.mapper.KirTracingFormDataMapper;
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import javax.persistence.EntityNotFoundException;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
-import java.util.Optional;
 import java.util.UUID;
 
 @RestController
@@ -28,17 +29,16 @@ public class KirTracingController {
 
 	@GetMapping()
 	public Page<KirTracingFormDto> getKirTracingForms(
-			@RequestParam Optional<@NoSignOfAttack String> search,
+			@RequestParam(required = false) KirTracingForm.Status status,
+			@RequestParam(required = false) @NoSignOfAttack String search,
 			Pageable pageable) {
-
-		var kirTracingForms = search
-				// searching without person null check should be fine as null values are not indexed
-				.map(it -> service.search(it, pageable))
-				.orElseGet(() -> service.findAllByPersonNotNull(pageable));
-
-		System.out.println(kirTracingForms.getContent());
-
-		return kirTracingForms.map(mapper::toDto);
+		if (StringUtils.isNotEmpty(search)) {
+			return service.search(status, search, pageable).map(mapper::toDto);
+		}
+		if (status != null) {
+			return service.findByStatus(status, pageable).map(mapper::toDto);
+		}
+		return service.findAllByPersonNotNull(pageable).map(mapper::toDto);
 	}
 
 	@GetMapping("/count/unsubmitted")
@@ -55,10 +55,15 @@ public class KirTracingController {
 	}
 
 	@PatchMapping("/{formId}")
-	public KirTracingFormDto updateKirTracingFormStatus(
+	public ResponseEntity<KirTracingFormDto> updateKirTracingFormStatus(
 			@PathVariable UUID formId, @RequestBody @Valid @NotNull KirTracingFormStatusUpdateDto updatedStatus) {
 
-		return service.updateFormStatus(formId, updatedStatus);
+		try {
+			var formDto = service.updateFormStatus(formId, updatedStatus);
+			return ResponseEntity.ok(formDto);
+		} catch (EntityNotFoundException e) {
+			return ResponseEntity.notFound().build();
+		}
 	}
 
 }

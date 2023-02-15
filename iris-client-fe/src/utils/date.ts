@@ -27,7 +27,7 @@ export const getFormattedDate = (
   if (date && dayjs(date).isValid()) {
     return dayjs(date).format(format || "LLL");
   }
-  return defaultValue || "-";
+  return defaultValue ?? "-";
 };
 
 export const getRelativeTime = (

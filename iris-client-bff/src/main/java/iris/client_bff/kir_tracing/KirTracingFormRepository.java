@@ -13,6 +13,7 @@ public interface KirTracingFormRepository extends AggregateRepository<KirTracing
 
     Optional<KirTracingForm> findByAccessToken(String accessToken);
     Page<KirTracingForm> findAllByPersonNotNull(Pageable pageable);
+    Page<KirTracingForm> findAllByStatusAndPersonNotNull(KirTracingForm.Status status, Pageable pageable);
     Integer countAllByPersonNull();
 
 }

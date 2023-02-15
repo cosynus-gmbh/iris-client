@@ -7,6 +7,7 @@ import com.nimbusds.srp6.SRP6ServerSession;
 import iris.client_bff.config.SrpParamsConfig;
 import iris.client_bff.core.alert.AlertService;
 import iris.client_bff.core.database.HibernateSearcher;
+import iris.client_bff.events.EventDataRequest;
 import iris.client_bff.kir_tracing.IncomingKirConnection.IncomingKirConnectionIdentifier;
 import iris.client_bff.kir_tracing.eps.KirChallengeDto;
 import iris.client_bff.kir_tracing.eps.KirTracingController;
@@ -201,12 +202,19 @@ public class KirTracingService {
         }
     }
 
+    public Page<KirTracingForm> search(KirTracingForm.Status status, String searchString, Pageable pageable) {
+        var result = searcher.search(
+                searchString,
+                pageable,
+                FIELDS,
+                it -> status != null ? it.must(f2 -> f2.match().field("status").matching(status)) : it,
+                KirTracingForm.class
+        );
+        return new PageImpl<>(result.hits(), pageable, result.total().hitCount());
+    }
+
     public Page<KirTracingForm> search(String searchString, Pageable pageable) {
-
-        var result = searcher.search(searchString, pageable, FIELDS, it -> it, KirTracingForm.class);
-
-        return new PageImpl<>(result.hits(), pageable, result.total()
-                .hitCount());
+        return this.search(null, searchString, pageable);
     }
 
     public Optional<KirTracingForm> findById(KirTracingForm.KirTracingFormIdentifier formId) {
@@ -219,7 +227,10 @@ public class KirTracingService {
 
     public Page<KirTracingForm> findAllByPersonNotNull(Pageable pageable) {
         return tracingForms.findAllByPersonNotNull(pageable);
+    }
 
+    public Page<KirTracingForm> findByStatus(KirTracingForm.Status status, Pageable pageable) {
+        return tracingForms.findAllByStatusAndPersonNotNull(status, pageable);
     }
 
     public Integer countUnsubmittedKirTracingForms() {

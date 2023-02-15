@@ -22,7 +22,7 @@
         <v-tab>Bewertungsbogen</v-tab>
         <v-tab>Therapieergebnisse</v-tab>
       </v-tabs>
-      <v-tabs-items v-model="currentTab" class="mt-4">
+      <v-tabs-items v-model="currentTab" class="mt-6">
         <v-tab-item>
           <kir-tracing-entry-assessment :tracing-entry="kirTracingEntry" />
         </v-tab-item>

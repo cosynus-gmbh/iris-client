@@ -29,7 +29,6 @@
         <v-col cols="12">
           <h3 class="mb-3">Ärztliche Betreuung</h3>
           <info-list :content="medicalCare" />
-          <v-divider class="mt-6" />
         </v-col>
       </v-row>
     </v-col>
@@ -63,16 +62,14 @@ export default class KirTracingEntryAssessmentCovid19 extends KirTracingEntryAss
   get virusDetection() {
     const data = this.tracingEntry?.assessment?.virusDetection;
     return [
+      ["Nachweismethode", kirTracingConstants.valueLabel(data?.method)],
       [
-        ["Nachweismethode", kirTracingConstants.valueLabel(data?.method)],
-        [
-          "Positiv getestet",
-          getRelativeTime(data?.date, {
-            prefix: ["", "am"],
-            format: "L",
-            defaultValue: "",
-          }),
-        ],
+        "Positiv getestet",
+        getRelativeTime(data?.date, {
+          prefix: ["", "am"],
+          format: "L",
+          defaultValue: "",
+        }),
       ],
     ];
   }
@@ -81,27 +78,25 @@ export default class KirTracingEntryAssessmentCovid19 extends KirTracingEntryAss
     const data = this.tracingEntry?.assessment?.symptoms;
     return [
       [
+        "Grippeähnliche Symptome oder Unwohlsein",
+        kirTracingConstants.valueLabel(data?.fluLike),
+      ],
+      [
+        "Symptome",
         [
-          "Grippeähnliche Symptome oder Unwohlsein",
-          kirTracingConstants.valueLabel(data?.fluLike),
+          ...(data?.occurrence ?? [])
+            // .filter((item) => item !== "others")
+            .map((item) => kirTracingConstants.valueLabel(item)),
+          data?.occurrence_others,
         ],
-        [
-          "Symptome",
-          [
-            ...(data?.occurrence ?? [])
-              // .filter((item) => item !== "others")
-              .map((item) => kirTracingConstants.valueLabel(item)),
-            data?.occurrence_others,
-          ],
-        ],
-        [
-          "Symptombeginn",
-          getRelativeTime(data?.date, {
-            prefix: ["", "am"],
-            format: "L",
-            defaultValue: "",
-          }),
-        ],
+      ],
+      [
+        "Symptombeginn",
+        getRelativeTime(data?.date, {
+          prefix: ["", "am"],
+          format: "L",
+          defaultValue: "",
+        }),
       ],
     ];
   }
@@ -110,24 +105,22 @@ export default class KirTracingEntryAssessmentCovid19 extends KirTracingEntryAss
     const data = this.tracingEntry?.assessment?.immuneStatus;
     return [
       [
+        "Anzahl der Impfungen",
+        kirTracingConstants.valueLabel(
+          data?.vaccinationCount,
+          "vaccinationCount"
+        ),
+      ],
+      [
+        "In der Vergangenheit bereits mit dem Coronavirus infiziert",
+        kirTracingConstants.valueLabel(data?.infection),
+      ],
+      [
+        "Infektionsdaten",
         [
-          "Anzahl der Impfungen",
-          kirTracingConstants.valueLabel(
-            data?.vaccinationCount,
-            "vaccinationCount"
+          ...(data?.infection_dates ?? []).map((item) =>
+            getFormattedDate(item.value, "LL", "")
           ),
-        ],
-        [
-          "In der Vergangenheit bereits mit dem Coronavirus infiziert",
-          kirTracingConstants.valueLabel(data?.infection),
-        ],
-        [
-          "Infektionsdaten",
-          [
-            ...(data?.infection_dates ?? []).map((item) =>
-              getFormattedDate(item.value, "LL")
-            ),
-          ],
         ],
       ],
     ];
@@ -136,51 +129,49 @@ export default class KirTracingEntryAssessmentCovid19 extends KirTracingEntryAss
   get risk() {
     const data = this.tracingEntry?.assessment?.risk;
     return [
+      ["Alter", kirTracingConstants.valueLabel(data?.age)],
       [
-        ["Alter", kirTracingConstants.valueLabel(data?.age)],
+        "Chronische Krankheit",
         [
-          "Chronische Krankheit",
-          [
-            kirTracingConstants.valueLabel(data?.chronicDisease),
-            data?.chronicDisease_details,
-          ],
+          kirTracingConstants.valueLabel(data?.chronicDisease),
+          data?.chronicDisease_details,
         ],
+      ],
+      [
+        "Medikamente die das Immunsystem unterdrücken",
+        kirTracingConstants.valueLabel(data?.drugsImmune),
+      ],
+      [
+        "Chronischen Nierenerkrankung",
+        kirTracingConstants.valueLabel(data?.kidneyDisease),
+      ],
+      isTrue(data?.kidneyDisease)
+        ? [
+            "Dialyse erforderlich",
+            kirTracingConstants.valueLabel(data?.kidneyDisease_dialysis),
+          ]
+        : [],
+      ["Trisomie 21", kirTracingConstants.valueLabel(data?.trisomy)],
+      [
+        "Stark übergewichtig (Body mass index > 35)",
+        kirTracingConstants.valueLabel(data?.fat),
+      ],
+      [
+        "HIV-Infektion mit weniger als 200 CD4-Zellen",
+        kirTracingConstants.valueLabel(data?.hiv),
+      ],
+      [
+        "Erkrankungen",
         [
-          "Medikamente die das Immunsystem unterdrücken",
-          kirTracingConstants.valueLabel(data?.drugsImmune),
+          ...(data?.diseases ?? []).map((item) =>
+            kirTracingConstants.valueLabel(item)
+          ),
+          data?.neurological_details,
         ],
-        [
-          "Chronischen Nierenerkrankung",
-          kirTracingConstants.valueLabel(data?.kidneyDisease),
-        ],
-        isTrue(data?.kidneyDisease)
-          ? [
-              "Dialyse erforderlich",
-              kirTracingConstants.valueLabel(data?.kidneyDisease_dialysis),
-            ]
-          : [],
-        ["Trisomie 21", kirTracingConstants.valueLabel(data?.trisomy)],
-        [
-          "Stark übergewichtig (Body mass index > 35)",
-          kirTracingConstants.valueLabel(data?.fat),
-        ],
-        [
-          "HIV-Infektion mit weniger als 200 CD4-Zellen",
-          kirTracingConstants.valueLabel(data?.hiv),
-        ],
-        [
-          "Erkrankungen",
-          [
-            ...(data?.diseases ?? []).map((item) =>
-              kirTracingConstants.valueLabel(item)
-            ),
-            data?.neurological_details,
-          ],
-        ],
-        [
-          "Regelmäßige Einnahme von Medikamenten",
-          [kirTracingConstants.valueLabel(data?.drugs), data?.drugs_details],
-        ],
+      ],
+      [
+        "Regelmäßige Einnahme von Medikamenten",
+        [kirTracingConstants.valueLabel(data?.drugs), data?.drugs_details],
       ],
     ];
   }
@@ -189,31 +180,26 @@ export default class KirTracingEntryAssessmentCovid19 extends KirTracingEntryAss
     const data = this.tracingEntry?.assessment?.medicalCare;
     return [
       [
-        [
-          "Hausarzt:in über positiven Test informiert",
-          kirTracingConstants.valueLabel(
-            data?.familyDoctorInformed,
-            "familyDoctorInformed"
-          ),
-        ],
-        [
-          "Therapiemöglichkeit bekannt",
-          kirTracingConstants.valueLabel(
-            data?.medicalTherapy,
-            "medicalTherapy"
-          ),
-        ],
-        [
-          "Interesse an Aufklärung über medikamentöse COVID-19-Therapie",
-          kirTracingConstants.valueLabel(data?.interest),
-        ],
-        !!data?.interest && !!data?.interest_phone
-          ? [
-              "Patient möchte unter folgender Telefonnummer erreicht werden",
-              data?.interest_phone,
-            ]
-          : [],
+        "Hausarzt/Hausärztin über positiven Test informiert",
+        kirTracingConstants.valueLabel(
+          data?.familyDoctorInformed,
+          "familyDoctorInformed"
+        ),
       ],
+      [
+        "Therapiemöglichkeit bekannt",
+        kirTracingConstants.valueLabel(data?.medicalTherapy, "medicalTherapy"),
+      ],
+      [
+        "Interesse an Aufklärung über medikamentöse COVID-19-Therapie",
+        kirTracingConstants.valueLabel(data?.interest),
+      ],
+      !!data?.interest && !!data?.interest_phone
+        ? [
+            "Patient:in möchte unter folgender Telefonnummer erreicht werden",
+            data?.interest_phone,
+          ]
+        : [],
     ];
   }
 }
