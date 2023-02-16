@@ -13,8 +13,9 @@
     <v-card class="my-7">
       <v-card-title>Kontakt Infizierte Risikogruppen</v-card-title>
       <v-card-subtitle v-if="fetchCount.state.result > 0">
-        {{ fetchCount.state.result }} Personen haben das Formular ausgefüllt,
-        jedoch nicht abgesendet.
+        {{ fetchCount.state.result }} von
+        {{ totalElements + fetchCount.state.result }} Person(en) haben das
+        Formular ausgefüllt, jedoch nicht abgesendet.
       </v-card-subtitle>
       <v-card-text>
         <search-field v-model="query.search" />

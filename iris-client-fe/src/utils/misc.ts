@@ -34,3 +34,13 @@ export const isFalse = (
   value === false ||
   value === "false" ||
   (checkNumber !== false ? value === 0 || value === "0" : false);
+
+export const pathsIn = (obj: Record<string, any>, prefix = ""): string[] => {
+  return Object.keys(obj).reduce((res: string[], key) => {
+    const element = obj[key];
+    if (typeof element === "object" && element !== null) {
+      return [...res, ...pathsIn(element, prefix + key + ".")];
+    }
+    return [...res, prefix + key];
+  }, []);
+};

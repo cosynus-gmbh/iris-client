@@ -20,7 +20,7 @@
       <v-divider class="my-4" />
       <v-tabs v-model="currentTab" @change="handleTabsChange">
         <v-tab>Bewertungsbogen</v-tab>
-        <v-tab>Therapieergebnisse</v-tab>
+        <v-tab :disabled="!hasTherapyResults">Therapieergebnisse</v-tab>
       </v-tabs>
       <v-tabs-items v-model="currentTab" class="mt-6">
         <v-tab-item>
@@ -62,6 +62,7 @@ import InfoList from "@/components/info-list.vue";
 import StatusChip from "@/components/status-chip.vue";
 import KirTracingEntryAssessment from "@/modules/kir-tracing/views/details/components/kir-tracing-entry-assessment.vue";
 import KirTracingEntryTherapyResults from "@/modules/kir-tracing/views/details/components/kir-tracing-entry-therapy-results.vue";
+import { pathsIn } from "@/utils/misc";
 
 @Component({
   components: {
@@ -102,6 +103,10 @@ export default class KirTracingEntryDetailsView extends Mixins(
 
   get kirTracingEntry() {
     return this.kirTracingApi.fetchTracingEntryDetails.state.result;
+  }
+
+  get hasTherapyResults() {
+    return pathsIn(this.kirTracingEntry?.therapyResults ?? {}).length > 0;
   }
 
   get status(): KirTracingStatus {

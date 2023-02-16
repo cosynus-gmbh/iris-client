@@ -1,8 +1,4 @@
-import {
-  EditableKirTracingStatus,
-  KirTracingDisease,
-  KirTracingStatus,
-} from "@/api";
+import { KirTracingDisease, KirTracingStatus } from "@/api";
 
 import { join } from "@/utils/misc";
 
@@ -81,14 +77,10 @@ const getStatusName = (status?: string): string => {
 
 const getStatusButtonLabel = (status?: string): string => {
   switch (status) {
-    case EditableKirTracingStatus.DONE:
+    case KirTracingStatus.DONE:
       return "Fall abgeschlossen";
-    case EditableKirTracingStatus.DATA_CHANGED:
-      return "Daten geändert";
-    case EditableKirTracingStatus.PERSON_CONTACTED:
-      return "Person kontaktiert";
     default:
-      return "Unbekannt";
+      return getStatusName(status);
   }
 };
 

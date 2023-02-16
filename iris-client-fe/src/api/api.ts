@@ -2045,7 +2045,6 @@ export enum KirTracingStatus {
 
 export enum EditableKirTracingStatus {
   PERSON_CONTACTED = "PERSON_CONTACTED",
-  DATA_CHANGED = "DATA_CHANGED",
   DONE = "DONE",
 }
 

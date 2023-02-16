@@ -101,7 +101,7 @@ export default class KirTracingEntryTherapyResultsCovid19 extends KirTracingEntr
       data?.hospital_icu,
       data?.hospital_oxygen,
     ].filter((v) => v);
-    return values.length >= 0;
+    return values.length > 0;
   }
   get paxlovid() {
     const data = this.tracingEntry?.therapyResults?.paxlovid;
@@ -121,7 +121,7 @@ export default class KirTracingEntryTherapyResultsCovid19 extends KirTracingEntr
           data?.prescription_others,
         ],
       ],
-      ["Ende der Symptome", getFormattedDate(data?.symptoms_endDate, "LL")],
+      ["Ende der Symptome", getFormattedDate(data?.symptoms_endDate, "LL", "")],
       [
         "Gründe gegen die Einnahme",
         [
