@@ -44,6 +44,8 @@ const formValueLabels: Record<string, string> = {
   "noMedication.notRecommended":
     "Weil Patient:in eine Krankheit habe oder ein Medikament einnehme, bei der eine Paxlovid Einnahme nicht empfohlen wird",
   "noMedication.noPrescription": "Weil es Patient:in nicht verschrieben wurde",
+  familyDoctor: "Hausarzt/Hausärztin",
+  healthDepartment: "Gesundheitsamt",
 };
 
 const valueLabel = (

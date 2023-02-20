@@ -10,10 +10,27 @@ import Home from "../views/home/Home.vue";
 import { getAuthenticatedUser } from "@/views/user-login/utils/store";
 import { UserRole } from "@/api";
 import dayjs from "@/utils/date";
+import { Component } from "vue-router/types/router";
+import _includes from "lodash/includes";
 
 Vue.use(VueRouter);
 
 // TODO create router config which exports these constants
+
+export const menuEnabled = (key: string): boolean => {
+  const keys = process.env.VUE_APP_NAV_MENU_ITEMS.split(",");
+  return _includes(keys, key);
+};
+
+const dashboard = (): Component => {
+  if (process.env.VUE_APP_DASHBOARD === "kir-tracing") {
+    return () =>
+      import(
+        /* webpackChunkName: "kir-tracing-dashboard" */ "../modules/kir-tracing/views/dashboard/kir-tracing-dashboard.view.vue"
+      );
+  }
+  return Home;
+};
 
 export const routes: Array<RouteConfig> = [
   {
@@ -24,7 +41,7 @@ export const routes: Array<RouteConfig> = [
       menuName: "Dashboard",
       menuExact: true,
     },
-    component: Home,
+    component: dashboard(),
   },
   {
     path: "/user/login",
@@ -100,6 +117,29 @@ export const routes: Array<RouteConfig> = [
       ),
   },
   {
+    path: "/kir-tracing-entry/list",
+    name: "kir-tracing-entry-list" /* Caution: This acts as an identifier! */,
+    meta: {
+      menu: menuEnabled("kir-tracing"),
+      menuName: "KIR",
+    },
+    component: () =>
+      import(
+        /* webpackChunkName: "kir-tracing-entry-list" */ "../modules/kir-tracing/views/list/kir-tracing-entry-list.view.vue"
+      ),
+  },
+  {
+    path: "/kir-tracing-entry/details/:id",
+    name: "kir-tracing-entry-details" /* Caution: This acts as an identifier! */,
+    meta: {
+      menu: false,
+    },
+    component: () =>
+      import(
+        /* webpackChunkName: "kir-tracing-entry-details" */ "../modules/kir-tracing/views/details/kir-tracing-entry-details.view.vue"
+      ),
+  },
+  {
     path: "/events/new",
     name: "event-new",
     meta: {
@@ -125,7 +165,7 @@ export const routes: Array<RouteConfig> = [
     path: "/events/list",
     name: "event-list" /* Caution: This acts as an identifier! */,
     meta: {
-      menu: true,
+      menu: menuEnabled("event"),
       menuName: "Ereignisse",
     },
     component: () =>
@@ -137,7 +177,7 @@ export const routes: Array<RouteConfig> = [
     path: "/cases/list",
     name: "index-list" /* Caution: This acts as an identifier! */,
     meta: {
-      menu: true,
+      menu: menuEnabled("case"),
       menuName: "Indexfälle",
     },
     component: () =>
@@ -171,7 +211,7 @@ export const routes: Array<RouteConfig> = [
     path: "/iris-messages/list",
     name: "iris-message-list" /* Caution: This acts as an identifier! */,
     meta: {
-      menu: true,
+      menu: menuEnabled("iris-message"),
       menuName: "Nachrichten",
       menuComponent: () =>
         import(
@@ -209,7 +249,7 @@ export const routes: Array<RouteConfig> = [
     path: "/vaccination-report/list",
     name: "vaccination-report-list" /* Caution: This acts as an identifier! */,
     meta: {
-      menu: true,
+      menu: menuEnabled("vaccination-report"),
       menuName: "Impfberichte",
     },
     component: () =>
@@ -226,29 +266,6 @@ export const routes: Array<RouteConfig> = [
     component: () =>
       import(
         /* webpackChunkName: "vaccination-report-details" */ "../modules/vaccination-report/views/details/vaccination-report-details.view.vue"
-      ),
-  },
-  {
-    path: "/kir-tracing-entry/list",
-    name: "kir-tracing-entry-list" /* Caution: This acts as an identifier! */,
-    meta: {
-      menu: true,
-      menuName: "KIR",
-    },
-    component: () =>
-      import(
-        /* webpackChunkName: "kir-tracing-entry-list" */ "../modules/kir-tracing/views/list/kir-tracing-entry-list.view.vue"
-      ),
-  },
-  {
-    path: "/kir-tracing-entry/details/:id",
-    name: "kir-tracing-entry-details" /* Caution: This acts as an identifier! */,
-    meta: {
-      menu: false,
-    },
-    component: () =>
-      import(
-        /* webpackChunkName: "kir-tracing-entry-details" */ "../modules/kir-tracing/views/details/kir-tracing-entry-details.view.vue"
       ),
   },
   {

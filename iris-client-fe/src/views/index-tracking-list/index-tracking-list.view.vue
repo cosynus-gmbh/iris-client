@@ -107,7 +107,7 @@ import StatusColors from "@/constants/StatusColors";
 import StatusMessages from "@/constants/StatusMessages";
 import _omit from "lodash/omit";
 import { debounce } from "lodash";
-import { DataQuery, getSortAttribute } from "@/api/common";
+import { DataQuery, DataQueryStatus, getSortAttribute } from "@/api/common";
 import { DataOptions } from "vuetify";
 import {
   getPageFromRouteWithDefault,
@@ -137,7 +137,7 @@ function getFormattedDate(date?: string): string {
   },
 })
 export default class IndexTrackingListView extends Vue {
-  statusFilter: DataRequestStatus | undefined = getStatusFilterFromRoute(
+  statusFilter: DataQueryStatus | undefined = getStatusFilterFromRoute(
     this.$route
   );
 

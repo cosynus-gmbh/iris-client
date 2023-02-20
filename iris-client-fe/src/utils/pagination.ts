@@ -1,5 +1,5 @@
 import { Route } from "vue-router";
-import { DataRequestStatus } from "@/api";
+import { DataQueryStatus } from "@/api/common";
 
 export const DEFAULT_PAGE_SIZE = 20;
 export const DEFAULT_ITEMS_PER_PAGE_OPTIONS = [10, 20, 30, 50];
@@ -14,7 +14,7 @@ type QueryParams = {
   sort: string | string[];
   search: string;
   folder: string;
-  status: DataRequestStatus;
+  status: DataQueryStatus;
 };
 
 export const getParamFromRoute = <T extends keyof QueryParams>(
@@ -50,6 +50,6 @@ export function getPageFromRouteWithDefault(route: Route): number {
 
 export function getStatusFilterFromRoute(
   route: Route
-): DataRequestStatus | undefined {
+): DataQueryStatus | undefined {
   return getParamFromRoute("status", route);
 }

@@ -1,5 +1,5 @@
 <template>
-  <v-menu left bottom>
+  <v-menu left bottom v-if="menuEnabled('app-menu')">
     <template v-slot:activator="{ on, attrs }">
       <v-btn
         class="mr-0"
@@ -22,14 +22,18 @@
       </v-list-item>
     </v-list>
   </v-menu>
+  <div v-else></div>
 </template>
 
 <script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
+import { menuEnabled } from "@/router";
 
 const AppSettingsMenuProps = Vue.extend({
   inheritAttrs: false,
 });
 @Component
-export default class AppSettingsMenu extends AppSettingsMenuProps {}
+export default class AppSettingsMenu extends AppSettingsMenuProps {
+  menuEnabled = menuEnabled;
+}
 </script>

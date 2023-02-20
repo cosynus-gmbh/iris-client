@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { DataRequestStatus } from "@/api/api";
+import { DataRequestStatus, KirTracingStatus } from "@/api/api";
 import globalAxios, {
   AxiosInstance,
   AxiosRequestConfig,
@@ -20,10 +20,12 @@ export type DataQuery = {
   size: number;
   page: number;
   sort?: string | string[] | null;
-  status?: DataRequestStatus | null;
+  status?: DataQueryStatus | null;
   search?: string | null;
   folder?: string;
 };
+
+export type DataQueryStatus = DataRequestStatus | KirTracingStatus;
 
 export type RequestQuery = {
   [index: string]: number | string | string[] | null | boolean;
