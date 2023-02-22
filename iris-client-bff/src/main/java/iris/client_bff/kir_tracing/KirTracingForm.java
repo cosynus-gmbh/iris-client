@@ -12,6 +12,8 @@ import org.hibernate.search.mapper.pojo.mapping.definition.annotation.*;
 
 import javax.persistence.*;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -52,6 +54,10 @@ public class KirTracingForm extends Aggregate<KirTracingForm, KirTracingForm.Kir
     @FullTextField
     private String therapyResults;
 
+    @OrderBy("metadata.created DESC")
+    @OneToMany(mappedBy = "form", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    private List<KirTracingMessage> messages = new ArrayList<>();
+
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     @GenericField(sortable = Sortable.YES)
@@ -77,6 +83,7 @@ public class KirTracingForm extends Aggregate<KirTracingForm, KirTracingForm.Kir
         // maybe clear accessToken as well?
         setTherapyResults("");
         setAssessment("");
+        setMessages(new ArrayList<>());
         setPerson(Person.builder().mobilePhone(getId().toString()).build());
         return this;
     }
@@ -129,7 +136,7 @@ public class KirTracingForm extends Aggregate<KirTracingForm, KirTracingForm.Kir
     }
 
     public enum Status {
-        NEW, PERSON_CONTACTED, DATA_CHANGED, THERAPY_RESULTS_RECEIVED, DONE
+        NEW, PERSON_CONTACTED, DATA_CHANGED, THERAPY_RESULTS_RECEIVED, MESSAGE_RECEIVED, DONE
     }
 
     public enum Disease {

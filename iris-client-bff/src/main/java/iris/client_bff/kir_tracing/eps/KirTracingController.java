@@ -8,10 +8,8 @@ import iris.client_bff.core.validation.Base64;
 import iris.client_bff.core.validation.NoSignOfAttack;
 import iris.client_bff.core.validation.NoSignOfAttackJsonNode;
 import iris.client_bff.kir_tracing.KirTracingException;
-import iris.client_bff.vaccination_info.VaccinationInfoAnnouncementException;
 import iris.client_bff.vaccination_info.eps.InvalidPublicKeyException;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.CrossOrigin;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
@@ -40,6 +38,13 @@ public interface KirTracingController {
             @JsonRpcParam(value = "accessToken") @NotNull @NoSignOfAttack String accessToken
     );
 
+    KirFormSubmissionResultDto closeKirSession(
+            @JsonRpcParam(value = "dataAuthorizationToken") @NotNull UUID dataAuthorizationToken,
+            @JsonRpcParam(value = "a") @NotNull String a,
+            @JsonRpcParam(value = "m1") @NotNull String m1,
+            @JsonRpcParam(value = "accessToken") @NotNull @NoSignOfAttack String accessToken
+    );
+
     KirFormSubmissionResultDto submitKirTracingForm(
             @JsonRpcParam(value = "dataAuthorizationToken") @NotNull UUID dataAuthorizationToken,
             @JsonRpcParam(value = "salt") @NotNull @NoSignOfAttack String salt,
@@ -61,6 +66,14 @@ public interface KirTracingController {
             @JsonRpcParam(value = "m1") @NotNull String m1,
             @JsonRpcParam(value = "accessToken") @NotNull @NoSignOfAttack String accessToken,
             @JsonRpcParam(value = "form") @NoSignOfAttackJsonNode @NotNull @Valid JsonNode therapyResults
+    );
+
+    KirFormSubmissionResultDto submitKirMessage(
+            @JsonRpcParam(value = "dataAuthorizationToken") @NotNull UUID dataAuthorizationToken,
+            @JsonRpcParam(value = "a") @NotNull String a,
+            @JsonRpcParam(value = "m1") @NotNull String m1,
+            @JsonRpcParam(value = "accessToken") @NotNull @NoSignOfAttack String accessToken,
+            @JsonRpcParam(value = "message") @NotNull @Valid KirTracingFormDto.MessageDto messageDto
     );
 
     KirFormSubmissionStatusDto getKirFormSubmissionStatus(

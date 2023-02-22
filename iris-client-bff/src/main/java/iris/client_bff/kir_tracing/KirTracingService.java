@@ -164,10 +164,29 @@ public class KirTracingService {
                 .therapyResults(therapyResults)
                 .build();
         form = mapper.update(form, updatedForm);
-        form.setSrpSession(null);
         form.setStatus(KirTracingForm.Status.THERAPY_RESULTS_RECEIVED);
         tracingForms.save(form);
 
+        return new KirFormSubmissionResultDto(accessToken);
+    }
+
+    public KirFormSubmissionResultDto submitKirMessage(SRP6ClientCredentials credentials, String accessToken, KirTracingFormDto.MessageDto messageDto) {
+        KirTracingForm form = authorize(credentials, accessToken).form;
+        KirTracingMessage message = mapper.toEntity(messageDto);
+        message.setForm(form);
+        form.getMessages().add(message);
+        form.setStatus(KirTracingForm.Status.MESSAGE_RECEIVED);
+        tracingForms.save(form);
+        return new KirFormSubmissionResultDto(accessToken);
+    }
+
+    public KirFormSubmissionResultDto closeKirSession(
+            SRP6ClientCredentials credentials,
+            String accessToken
+    ) {
+        KirTracingForm form = authorize(credentials, accessToken).form;
+        form.setSrpSession(null);
+        tracingForms.save(form);
         return new KirFormSubmissionResultDto(accessToken);
     }
 
@@ -268,7 +287,7 @@ public class KirTracingService {
                 .isEmpty() || form.getSrpVerifier()
                 .isEmpty()) throw new InvalidParameterException("Invalid credentials");
 
-        SRP6ServerSession serverSession = new SRP6ServerSession(srpParamsConfig.getConfig());
+        SRP6ServerSession serverSession = new SRP6ServerSession(srpParamsConfig.getConfig(), srpParamsConfig.getSessionTimeout());
 
         BigInteger challenge = serverSession.step1(form.getAccessToken(), BigIntegerUtils.fromHex(form.getSrpSalt()), BigIntegerUtils.fromHex(form.getSrpVerifier()));
 
@@ -304,7 +323,7 @@ public class KirTracingService {
     static class Properties {
 
         /**
-         * Defines the {@link Duration} after that a vaccination info announcement will be expire.
+         * Defines the {@link Duration} after that a kir tracing announcement will be expire.
          */
         @NotNull
         private Duration expirationDuration;

@@ -5,6 +5,7 @@ import iris.client_bff.core.serialization.DefuseJsonString;
 import iris.client_bff.core.validation.AttackDetector;
 import iris.client_bff.core.validation.NoSignOfAttack;
 import iris.client_bff.core.validation.NoSignOfAttackJsonNode;
+import iris.client_bff.iris_messages.IrisMessage;
 import lombok.Builder;
 import lombok.Data;
 import lombok.ToString;
@@ -12,7 +13,9 @@ import org.springframework.validation.annotation.Validated;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.Size;
 import java.time.Instant;
+import java.util.List;
 
 @Data
 @Validated
@@ -26,9 +29,13 @@ public class KirTracingFormDto {
     @Valid
     private PersonDto person;
 
+    @NoSignOfAttack
     private String status;
 
+    @NoSignOfAttack
     private String targetDisease;
+
+    private List<@Valid MessageDto> messages;
 
     @NoSignOfAttackJsonNode
     private JsonNode assessment;
@@ -43,8 +50,22 @@ public class KirTracingFormDto {
     public static class PersonDto {
 
         @NotBlank(message = "api.constraints.person_mobilePhone")
+        @NoSignOfAttack(payload = AttackDetector.Phone.class)
         @DefuseJsonString(maxLength = 100, payload = AttackDetector.Phone.class)
         private String mobilePhone;
+
+    }
+
+    @Data
+    @Validated
+    public static class MessageDto {
+
+        @NotBlank(message = "api.constraints.message")
+        @NoSignOfAttack()
+        @DefuseJsonString(maxLength = 6000)
+        private String text;
+
+        private Instant createdAt;
 
     }
 }

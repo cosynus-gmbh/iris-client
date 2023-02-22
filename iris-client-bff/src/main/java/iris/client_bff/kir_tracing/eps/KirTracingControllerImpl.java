@@ -95,6 +95,24 @@ public class KirTracingControllerImpl implements KirTracingController {
     }
 
     @Override
+    public KirFormSubmissionResultDto submitKirMessage(UUID dataAuthorizationToken, String a, String m1, String accessToken, KirTracingFormDto.MessageDto messageDto) {
+
+        log.debug("Start submitting KIR message (JSON-RPC interface)");
+
+        if (!service.validateConnection(dataAuthorizationToken)) {
+            throw new IllegalArgumentException("Unknown dataAuthorizationToken: " + dataAuthorizationToken);
+        }
+
+        SRP6ClientCredentials credentials = new SRP6ClientCredentials(BigIntegerUtils.fromHex(a), BigIntegerUtils.fromHex(m1));
+
+        var result = service.submitKirMessage(credentials, accessToken, messageDto);
+
+        log.trace("Finish submitting KIR message (JSON-RPC interface)");
+
+        return result;
+    }
+
+    @Override
     public KirFormSubmissionStatusDto getKirFormSubmissionStatus(UUID dataAuthorizationToken, String a, String m1, String accessToken) {
 
         log.debug("Start getting KIR form submission status (JSON-RPC interface)");
@@ -128,4 +146,22 @@ public class KirTracingControllerImpl implements KirTracingController {
 
         return result;
     }
+
+    @Override
+    public KirFormSubmissionResultDto closeKirSession(UUID dataAuthorizationToken, String a, String m1, String accessToken) {
+        log.debug("Start closing KIR session (JSON-RPC interface)");
+
+        if (!service.validateConnection(dataAuthorizationToken)) {
+            throw new IllegalArgumentException("Unknown dataAuthorizationToken: " + dataAuthorizationToken);
+        }
+
+        SRP6ClientCredentials credentials = new SRP6ClientCredentials(BigIntegerUtils.fromHex(a), BigIntegerUtils.fromHex(m1));
+
+        var result = service.closeKirSession(credentials, accessToken);
+
+        log.trace("Finished closing KIR session (JSON-RPC interface)");
+
+        return result;
+    }
+
 }
