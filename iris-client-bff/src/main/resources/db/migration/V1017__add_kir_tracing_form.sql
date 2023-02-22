@@ -18,3 +18,17 @@ CREATE TABLE kir_tracing_form (
 	FOREIGN KEY (created_by) REFERENCES user_accounts(user_id),
 	FOREIGN KEY (last_modified_by) REFERENCES user_accounts(user_id)
 );
+
+CREATE TABLE kir_tracing_message (
+    id uuid NOT NULL,
+    form_id uuid NOT NULL,
+    text text NOT NULL,
+    created timestamp NOT NULL,
+    last_modified timestamp NOT NULL,
+    created_by uuid NULL,
+    last_modified_by uuid NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (created_by) REFERENCES user_accounts(user_id),
+    FOREIGN KEY (last_modified_by) REFERENCES user_accounts(user_id),
+    CONSTRAINT kir_tracing_message_fk FOREIGN KEY (form_id) REFERENCES kir_tracing_form(id)
+);

@@ -62,7 +62,7 @@ export default class InfoList extends InfoListProps {
 }
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
 ul.info-list {
   list-style: none;
   padding-left: 0;

@@ -25,4 +25,12 @@ public class SrpParamsConfig {
         return 32;
     }
 
+    private Integer sessionTimeout;
+
+    public int getSessionTimeout() {
+        if (this.sessionTimeout != null) {
+            return this.sessionTimeout;
+        }
+        return 0;
+    }
 }

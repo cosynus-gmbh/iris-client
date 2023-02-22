@@ -2040,6 +2040,7 @@ export enum KirTracingStatus {
   PERSON_CONTACTED = "PERSON_CONTACTED",
   DATA_CHANGED = "DATA_CHANGED",
   THERAPY_RESULTS_RECEIVED = "THERAPY_RESULTS_RECEIVED",
+  MESSAGE_RECEIVED = "MESSAGE_RECEIVED",
   DONE = "DONE",
 }
 
@@ -2062,10 +2063,16 @@ export interface KirTracingEntry<
   assessment?: KirTracingAssessment[D];
   therapyResults?: KirTracingTherapyResults[D];
   createdAt?: string;
+  messages?: KirTracingMessage[];
 }
 
 export interface KirTracingPerson {
   mobilePhone: string;
+}
+
+export interface KirTracingMessage {
+  text?: string;
+  createdAt?: string;
 }
 
 export type YesNo = "1" | "0";

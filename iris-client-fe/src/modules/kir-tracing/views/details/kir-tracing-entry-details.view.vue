@@ -21,6 +21,9 @@
       <v-tabs v-model="currentTab" @change="handleTabsChange">
         <v-tab>Bewertungsbogen</v-tab>
         <v-tab :disabled="!hasTherapyResults">Therapieergebnisse</v-tab>
+        <v-tab :disabled="tracingMessages.length <= 0">
+          {{ tracingMessages.length === 1 ? "Nachricht" : "Nachrichten" }}
+        </v-tab>
       </v-tabs>
       <v-tabs-items v-model="currentTab" class="mt-6">
         <v-tab-item>
@@ -28,6 +31,29 @@
         </v-tab-item>
         <v-tab-item>
           <kir-tracing-entry-therapy-results :tracing-entry="kirTracingEntry" />
+        </v-tab-item>
+        <v-tab-item>
+          <v-row>
+            <v-col cols="12">
+              <div
+                v-for="(message, index) in tracingMessages"
+                :key="index"
+                class="mb-4"
+              >
+                <v-card outlined rounded="0">
+                  <v-card-text>
+                    <div class="text-right">
+                      {{ getFormattedDate(message.createdAt) }}
+                    </div>
+                    <v-divider class="my-4" />
+                    <div class="text-pre-line">
+                      {{ message.text }}
+                    </div>
+                  </v-card-text>
+                </v-card>
+              </div>
+            </v-col>
+          </v-row>
         </v-tab-item>
       </v-tabs-items>
       <error-message-alert :errors="errorMessages" />
@@ -99,7 +125,12 @@ export default class KirTracingEntryDetailsView extends Mixins(
     ];
   }
 
+  get tracingMessages() {
+    return this.kirTracingEntry?.messages ?? [];
+  }
+
   kirTracingConstants = kirTracingConstants;
+  getFormattedDate = getFormattedDate;
 
   get kirTracingEntry() {
     return this.kirTracingApi.fetchTracingEntryDetails.state.result;

@@ -72,8 +72,10 @@ const getStatusName = (status?: string): string => {
       return "Person kontaktiert";
     case KirTracingStatus.THERAPY_RESULTS_RECEIVED:
       return "Therapieergebnisse erhalten";
+    case KirTracingStatus.MESSAGE_RECEIVED:
+      return "Nachricht erhalten";
     default:
-      return "Unbekannt";
+      return status ?? "Unbekannt";
   }
 };
 
@@ -98,6 +100,8 @@ const getStatusColor = (status?: string): string => {
       return "green";
     case KirTracingStatus.THERAPY_RESULTS_RECEIVED:
       return "red";
+    case KirTracingStatus.MESSAGE_RECEIVED:
+      return "blue";
     default:
       return "gray";
   }

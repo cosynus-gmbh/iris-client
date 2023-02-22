@@ -2,6 +2,7 @@ import {
   KirTracingAssessment,
   KirTracingDisease,
   KirTracingEntry,
+  KirTracingMessage,
   KirTracingPerson,
   KirTracingStatus,
   KirTracingTherapyResults,
@@ -56,6 +57,23 @@ export const normalizeKirTracingPerson = (
   );
 };
 
+export const normalizeKirTracingMessage = (
+  source?: KirTracingMessage,
+  parse?: boolean
+): KirTracingMessage => {
+  return normalizeData(
+    source,
+    (normalizer) => {
+      return {
+        text: normalizer("text", ""),
+        createdAt: normalizer("createdAt", undefined, "dateString"),
+      };
+    },
+    parse,
+    "KirTracingMessage"
+  );
+};
+
 export const normalizeKirTracingEntry = (
   source?: KirTracingEntry,
   parse?: boolean
@@ -67,6 +85,7 @@ export const normalizeKirTracingEntry = (
         "targetDisease",
         KirTracingDisease.COVID_19
       );
+      const messages = normalizer("messages", undefined, "array") || [];
       return {
         id: normalizer("id", undefined),
         targetDisease: targetDisease,
@@ -81,6 +100,9 @@ export const normalizeKirTracingEntry = (
         person: normalizeKirTracingPerson(source?.person),
         status: normalizer("status", KirTracingStatus.NEW),
         createdAt: normalizer("createdAt", undefined, "dateString"),
+        messages: messages.map((message) =>
+          normalizeKirTracingMessage(message)
+        ),
       };
     },
     parse,
