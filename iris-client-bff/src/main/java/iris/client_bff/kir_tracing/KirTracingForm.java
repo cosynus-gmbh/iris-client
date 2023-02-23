@@ -42,7 +42,7 @@ public class KirTracingForm extends Aggregate<KirTracingForm, KirTracingForm.Kir
 
     @Builder.Default
     @Column(unique = true)
-    private String accessToken = RandomStringUtils.randomAlphanumeric(10)
+    private String accessToken = RandomStringUtils.random(10, "23456789ABCDEFGHKLMNPQRSTUVWXYZ")
             .toUpperCase();
 
     @IndexedEmbedded
