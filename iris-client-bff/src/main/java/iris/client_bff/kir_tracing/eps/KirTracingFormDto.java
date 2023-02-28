@@ -13,7 +13,6 @@ import org.springframework.validation.annotation.Validated;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.Size;
 import java.time.Instant;
 import java.util.List;
 
@@ -31,6 +30,10 @@ public class KirTracingFormDto {
 
     @NoSignOfAttack
     private String status;
+
+    private Double riskFactor;
+
+    private Double symptomSeverity;
 
     @NoSignOfAttack
     private String targetDisease;

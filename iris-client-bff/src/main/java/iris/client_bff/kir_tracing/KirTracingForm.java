@@ -48,6 +48,14 @@ public class KirTracingForm extends Aggregate<KirTracingForm, KirTracingForm.Kir
     @IndexedEmbedded
     private Person person;
 
+    @Column(columnDefinition = "DECIMAL(30,10)")
+    @GenericField(sortable = Sortable.YES, searchable = Searchable.YES)
+    private Double riskFactor;
+
+    @Column(columnDefinition = "DECIMAL(30,10)")
+    @GenericField(sortable = Sortable.YES, searchable = Searchable.YES)
+    private Double symptomSeverity;
+
     @FullTextField
     private String assessment;
 

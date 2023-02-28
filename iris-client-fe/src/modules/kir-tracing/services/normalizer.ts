@@ -103,6 +103,8 @@ export const normalizeKirTracingEntry = (
         messages: messages.map((message) =>
           normalizeKirTracingMessage(message)
         ),
+        riskFactor: normalizer("riskFactor", undefined, "number"),
+        symptomSeverity: normalizer("symptomSeverity", undefined, "number"),
       };
     },
     parse,

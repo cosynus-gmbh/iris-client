@@ -8,7 +8,9 @@ import iris.client_bff.kir_tracing.mapper.KirTracingFormDataMapper;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -32,6 +34,7 @@ public class KirTracingController {
 			@RequestParam(required = false) KirTracingForm.Status status,
 			@RequestParam(required = false) @NoSignOfAttack String search,
 			Pageable pageable) {
+		pageable = adaptPageable(pageable);
 		if (StringUtils.isNotEmpty(search)) {
 			return service.search(status, search, pageable).map(mapper::toDto);
 		}
@@ -39,6 +42,16 @@ public class KirTracingController {
 			return service.findByStatus(status, pageable).map(mapper::toDto);
 		}
 		return service.findAllByPersonNotNull(pageable).map(mapper::toDto);
+	}
+
+	private PageRequest adaptPageable(Pageable pageable) {
+		var sort = pageable.getSort();
+		if (sort.isEmpty()) {
+			sort = Sort.by("riskFactor").descending()
+					.and(Sort.by("symptomSeverity").descending())
+					.and(Sort.by("metadata.created").descending());
+		}
+		return PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), sort);
 	}
 
 	@GetMapping("/count/unsubmitted")

@@ -2059,6 +2059,8 @@ export interface KirTracingEntry<
   id?: string;
   person: KirTracingPerson;
   status: KirTracingStatus;
+  riskFactor?: number;
+  symptomSeverity?: number;
   targetDisease: D;
   assessment?: KirTracingAssessment[D];
   therapyResults?: KirTracingTherapyResults[D];
@@ -2080,6 +2082,35 @@ export type YesNo = "1" | "0";
 export interface KirTracingAssessment {
   [KirTracingDisease.COVID_19]: Partial<KirTracingAssessmentCovid19>;
 }
+
+export interface KirTracingAssessmentThresholds {
+  none: number;
+  low: number;
+  medium: number;
+  high: number;
+}
+
+enum KirTracingRiskFactorThresholds_Covid19 {
+  none = 0,
+  low = 1,
+  medium = 3,
+  high = 7,
+}
+
+enum KirTracingSymptomSeverityThresholds_Covid19 {
+  none = 0,
+  low = 1,
+  medium = 3,
+  high = 7,
+}
+
+export const kirTracingRiskFactorThresholds = {
+  [KirTracingDisease.COVID_19]: KirTracingRiskFactorThresholds_Covid19,
+};
+
+export const kirTracingSymptomSeverityThresholds = {
+  [KirTracingDisease.COVID_19]: KirTracingSymptomSeverityThresholds_Covid19,
+};
 
 export interface KirTracingAssessmentCovid19 {
   virusDetection: Partial<{

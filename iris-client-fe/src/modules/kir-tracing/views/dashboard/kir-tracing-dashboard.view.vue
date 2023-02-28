@@ -34,7 +34,13 @@
           :server-items-length="totalElements"
           @click:row="handleRowClick"
           data-test="view.data-table"
+          multi-sort
         >
+          <template #item.therapyRecommendation="{ item }">
+            <v-chip :color="item.therapyRecommendation.color" dark>
+              {{ item.therapyRecommendation.label }}
+            </v-chip>
+          </template>
           <template #item.status="{ item }">
             <status-chip :mapper="kirTracingConstants" :status="item.status" />
           </template>

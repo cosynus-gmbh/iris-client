@@ -4,7 +4,28 @@
     <v-card-text>
       <v-row>
         <v-col cols="12" sm="6">
-          <info-grid :content="reportInfo" />
+          <v-row>
+            <v-col cols="12">
+              <info-grid :content="reportInfo" />
+            </v-col>
+            <v-col cols="12">
+              <v-row dense>
+                <v-col cols="12" md="6" align-self="center">
+                  <strong> Therapieempfehlung: </strong>
+                </v-col>
+                <v-col cols="12" md="6" align-self="center">
+                  <v-chip :color="therapyRecommendationColor" dark>
+                    {{ therapyRecommendationLabel }}
+                  </v-chip>
+                </v-col>
+              </v-row>
+              <v-row>
+                <v-col cols="12">
+                  <info-list :content="therapyInfo" />
+                </v-col>
+              </v-row>
+            </v-col>
+          </v-row>
         </v-col>
         <v-col cols="12" sm="6" data-test="event.status">
           <span class="d-inline-block mr-3">
@@ -122,6 +143,42 @@ export default class KirTracingEntryDetailsView extends Mixins(
     return [
       [["Kontakt", this.kirTracingEntry?.person.mobilePhone]],
       [["Meldung vom", getFormattedDate(this.kirTracingEntry?.createdAt)]],
+    ];
+  }
+
+  get therapyRecommendationColor() {
+    const therapy = kirTracingConstants.getTherapyRecommendationThreshold(
+      this.kirTracingEntry?.riskFactor,
+      this.kirTracingEntry?.symptomSeverity,
+      this.kirTracingEntry?.targetDisease
+    );
+    return kirTracingConstants.getThresholdColor(therapy);
+  }
+
+  get therapyRecommendationLabel() {
+    return kirTracingConstants.getTherapyRecommendationLabel(
+      this.kirTracingEntry?.riskFactor,
+      this.kirTracingEntry?.symptomSeverity,
+      this.kirTracingEntry?.targetDisease
+    );
+  }
+
+  get therapyInfo() {
+    return [
+      [
+        "Riskobewertung",
+        kirTracingConstants.getRiskFactorLabel(
+          this.kirTracingEntry?.riskFactor,
+          this.kirTracingEntry?.targetDisease
+        ),
+      ],
+      [
+        "Schwere der Symptome",
+        kirTracingConstants.getSymptomSeverityLabel(
+          this.kirTracingEntry?.symptomSeverity,
+          this.kirTracingEntry?.targetDisease
+        ),
+      ],
     ];
   }
 

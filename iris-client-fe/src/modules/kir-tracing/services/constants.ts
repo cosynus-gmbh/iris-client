@@ -1,4 +1,10 @@
-import { KirTracingDisease, KirTracingStatus } from "@/api";
+import {
+  KirTracingAssessmentThresholds,
+  KirTracingDisease,
+  kirTracingRiskFactorThresholds,
+  KirTracingStatus,
+  kirTracingSymptomSeverityThresholds,
+} from "@/api";
 
 import { join } from "@/utils/misc";
 
@@ -116,12 +122,178 @@ const getDisease = (type?: string): string => {
   }
 };
 
+const getThreshold = (
+  value: number | undefined,
+  thresholds: KirTracingAssessmentThresholds | undefined
+): keyof KirTracingAssessmentThresholds | undefined => {
+  if (value === undefined || thresholds === undefined) return;
+  if (value > thresholds.high) {
+    return "high";
+  }
+  if (value >= thresholds.medium) {
+    return "medium";
+  }
+  if (value >= thresholds.low) {
+    return "low";
+  }
+  if (value >= thresholds.none) {
+    return "none";
+  }
+};
+
+const getTherapyRecommendationThreshold = (
+  riskFactor: number | undefined,
+  symptomSeverity: number | undefined,
+  disease: KirTracingDisease | undefined
+): keyof KirTracingAssessmentThresholds | undefined => {
+  if (!disease) return "none";
+  const risk = getThreshold(
+    riskFactor,
+    kirTracingRiskFactorThresholds[disease]
+  );
+  const symptom = getThreshold(
+    riskFactor,
+    kirTracingSymptomSeverityThresholds[disease]
+  );
+  switch (risk) {
+    case "high":
+      return "high";
+    case "medium":
+      switch (symptom) {
+        case "high":
+        case "medium":
+          return "high";
+        case "low":
+        case "none":
+          return "medium";
+        default:
+          return "none";
+      }
+    case "low":
+      switch (symptom) {
+        case "high":
+          return "medium";
+        default:
+          return "low";
+      }
+    case "none":
+      switch (symptom) {
+        case "high":
+          return "low";
+        default:
+          return "none";
+      }
+    default:
+      return "none";
+  }
+};
+
+const getTherapyRecommendationLabel = (
+  riskFactor: number | undefined,
+  symptomSeverity: number | undefined,
+  disease: KirTracingDisease | undefined,
+  short?: boolean
+): string => {
+  const threshold = getTherapyRecommendationThreshold(
+    riskFactor,
+    symptomSeverity,
+    disease
+  );
+  switch (threshold) {
+    case "high":
+      return short ? "Hoch" : "Hohe Therapieempfehlung";
+    case "medium":
+      return short ? "Mittel" : "Mittlere Therapieempfehlung";
+    case "low":
+      return short ? "Niedrig" : "Niedrige Therapieempfehlung";
+    case "none":
+      return short ? "Kein" : "Keine Therapieempfehlung";
+    default:
+      return "";
+  }
+};
+
+const getRiskFactorLabel = (
+  value: number | undefined,
+  disease: KirTracingDisease | undefined,
+  short?: boolean
+): string => {
+  const threshold = disease
+    ? getThreshold(value, kirTracingRiskFactorThresholds[disease])
+    : undefined;
+  const label = () => {
+    switch (threshold) {
+      case "high":
+        return short ? "Hoch" : "Hohes Risiko";
+      case "medium":
+        return short ? "Mittel" : "Mittleres Risiko";
+      case "low":
+        return short ? "Niedrig" : "Niedriges Risiko";
+      case "none":
+        return short ? "Kein" : "Kein Risiko";
+      default:
+        return "";
+    }
+  };
+  return thresholdLabel(label(), value);
+};
+
+const thresholdLabel = (label: string, value: number | undefined): string => {
+  return join([label, value !== undefined ? `(${value})` : undefined], " ");
+};
+
+const getSymptomSeverityLabel = (
+  value: number | undefined,
+  disease: KirTracingDisease | undefined,
+  short?: boolean
+): string => {
+  const threshold = disease
+    ? getThreshold(value, kirTracingSymptomSeverityThresholds[disease])
+    : undefined;
+  const label = () => {
+    switch (threshold) {
+      case "high":
+        return short ? "Schwer" : "Schwere Symptomstärke";
+      case "medium":
+        return short ? "Mittel" : "Mittlere Symptomstärke";
+      case "low":
+        return short ? "Niedrig" : "Niedrige Symptomstärke";
+      case "none":
+        return short ? "Keine" : "keine Symptome";
+      default:
+        return "";
+    }
+  };
+  return thresholdLabel(label(), value);
+};
+
+const getThresholdColor = (
+  threshold?: keyof KirTracingAssessmentThresholds
+): string => {
+  switch (threshold) {
+    case "high":
+      return "red";
+    case "medium":
+      return "yellow";
+    case "low":
+      return "blue";
+    case "none":
+    default:
+      return "green";
+  }
+};
+
 const kirTracingConstants = {
   getStatusName,
   getStatusButtonLabel,
   getStatusColor,
   getDisease,
   valueLabel,
+  getRiskFactorLabel,
+  getSymptomSeverityLabel,
+  getTherapyRecommendationThreshold,
+  getTherapyRecommendationLabel,
+  getThresholdColor,
 };
 
 export default kirTracingConstants;

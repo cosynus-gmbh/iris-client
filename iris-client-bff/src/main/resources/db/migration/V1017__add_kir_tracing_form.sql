@@ -2,6 +2,8 @@ CREATE TABLE kir_tracing_form (
 	id uuid NOT NULL,
 	access_token varchar(256) NOT NULL,
     status varchar(50) NOT NULL,
+    risk_factor decimal(30,10) NULL,
+    symptom_severity decimal(30,10) NULL,
     assessment text NULL,
     therapy_results text NULL,
     target_disease varchar(50) NOT NULL,
