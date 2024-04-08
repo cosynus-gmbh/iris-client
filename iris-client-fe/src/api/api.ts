@@ -2031,39 +2031,31 @@ export interface MfaVerification {
   otp: string;
 }
 
-export enum KirTracingDisease {
-  COVID_19 = "COVID_19",
-}
-
 export enum KirTracingStatus {
   NEW = "NEW",
   PERSON_CONTACTED = "PERSON_CONTACTED",
   DATA_CHANGED = "DATA_CHANGED",
-  THERAPY_RESULTS_RECEIVED = "THERAPY_RESULTS_RECEIVED",
+  AID_REQUEST_RECEIVED = "AID_REQUEST_RECEIVED",
   MESSAGE_RECEIVED = "MESSAGE_RECEIVED",
-  DONE = "DONE",
+  CLOSED = "CLOSED",
 }
 
 export enum EditableKirTracingStatus {
   PERSON_CONTACTED = "PERSON_CONTACTED",
-  DONE = "DONE",
+  CLOSED = "CLOSED",
 }
 
 export interface KirTracingEntryUpdate {
   status: KirTracingStatus;
 }
 
-export interface KirTracingEntry<
-  D extends KirTracingDisease = KirTracingDisease
-> {
+export interface KirTracingEntry {
   id?: string;
   person: KirTracingPerson;
   status: KirTracingStatus;
   riskFactor?: number;
-  symptomSeverity?: number;
-  targetDisease: D;
-  assessment?: KirTracingAssessment[D];
-  therapyResults?: KirTracingTherapyResults[D];
+  assessment?: Partial<KirTracingAssessment>;
+  aidRequest?: Partial<KirTracingAidRequest>;
   createdAt?: string;
   messages?: KirTracingMessage[];
 }
@@ -2077,11 +2069,18 @@ export interface KirTracingMessage {
   createdAt?: string;
 }
 
-export type YesNo = "1" | "0";
+export type GeoLocation = {
+  latitude: number | string;
+  longitude: number | string;
+};
 
-export interface KirTracingAssessment {
-  [KirTracingDisease.COVID_19]: Partial<KirTracingAssessmentCovid19>;
-}
+export type Place = {
+  loc_id: string;
+  postcode: string;
+  city: string;
+} & GeoLocation;
+
+export type YesNo = "1" | "0";
 
 export interface KirTracingAssessmentThresholds {
   none: number;
@@ -2090,113 +2089,89 @@ export interface KirTracingAssessmentThresholds {
   high: number;
 }
 
-enum KirTracingRiskFactorThresholds_Covid19 {
+export enum KirTracingRiskFactorThresholds {
   none = 0,
   low = 1,
-  medium = 3,
-  high = 7,
+  medium = 2,
+  high = 5,
 }
 
-enum KirTracingSymptomSeverityThresholds_Covid19 {
-  none = 0,
-  low = 1,
-  medium = 3,
-  high = 7,
-}
-
-export const kirTracingRiskFactorThresholds = {
-  [KirTracingDisease.COVID_19]: KirTracingRiskFactorThresholds_Covid19,
-};
-
-export const kirTracingSymptomSeverityThresholds = {
-  [KirTracingDisease.COVID_19]: KirTracingSymptomSeverityThresholds_Covid19,
-};
-
-export interface KirTracingAssessmentCovid19 {
-  virusDetection: Partial<{
-    method: "pcr" | "antigen";
-    date: "string";
+export interface KirTracingAssessment {
+  personalData: Partial<{
+    firstName: string;
+    lastName: string;
+    phone: string;
+    email: string;
+  }>;
+  exposition: Partial<{
+    location: Partial<Place>;
+    dateTime: string;
+    locationNotes: string;
+    protectiveMask: "ffp2" | "mouthNoseProtection" | "none";
+  }>;
+  currentLocation: Partial<{
+    location: Partial<Place>;
+    dateTime: string;
+    locationType: "atHome" | "friendsPlace" | "other";
+    locationType_other:
+      | "hospital"
+      | "school"
+      | "university"
+      | "library"
+      | "other";
+    locationType_other_details: string;
+    numberOfPeople: number;
+    vulnerablePeople: YesNo;
+    vulnerablePeople_yes_details: string;
+    spatialSeparationPossible: YesNo;
+    spatialSeparationPossible_details: string;
   }>;
   symptoms: Partial<{
-    fluLike: YesNo;
-    occurrence: Partial<
-      [
-        "cough",
-        "cold",
-        "fever",
-        "headache",
-        "breathlessness",
-        "weakness",
-        "lossOfSmellOrTaste",
-        "others"
-      ]
+    healthProblems: "none" | "beforeTheEvent" | "afterTheEvent";
+    healthProblems_afterTheEvent_dateTime: string;
+    breathingDifficulties: YesNo;
+    breathingDifficulties_yes_details: Partial<["breathing", "cough"]>;
+    bodyTemperature: "low" | "medium" | "high";
+    nauseaOrVomiting: YesNo;
+    nauseaOrVomiting_yes_details: Partial<["nausea", "vomiting"]>;
+    nauseaOrVomiting_yes_details_vomiting_numberOfTimes: number;
+    diarrhea: YesNo;
+    diarrhea_yes_numberOfTimes: number;
+    rash: YesNo;
+    rash_yes_details: string;
+    unusualBleeding: YesNo;
+    unusualBleeding_yes_details: Partial<
+      ["nose", "gums", "stool", "urine", "vomit", "other"]
     >;
-    occurrence_others: "string";
-    date: "string";
+    unusualBleeding_yes_details_other_details: string;
+    healthConditionInfo: string;
   }>;
-  immuneStatus: Partial<{
-    vaccinationCount: "0" | "1" | "2" | "3" | "4" | "gt4";
-    infection: YesNo;
-    infection_dates?: [{ value: string }];
-  }>;
-  risk: Partial<{
-    age: "lt30" | "30-49" | "50-59" | "60-69" | "70-79" | "gte80";
+  previousIllness: Partial<{
     chronicDisease: YesNo;
-    chronicDisease_details?: string;
-    drugsImmune: YesNo;
+    chronicRespiratoryDisease: YesNo;
+    chronicRespiratoryDisease_yes_details: Partial<
+      ["bronchialAsthma", "copd", "other"]
+    >;
+    chronicRespiratoryDisease_yes_details_other_details: string;
+    cardiovascularDisease: YesNo;
+    cardiovascularDisease_yes_details: string;
     kidneyDisease: YesNo;
-    kidneyDisease_dialysis?: YesNo;
-    trisomy: YesNo;
-    fat: YesNo;
-    hiv: YesNo;
-    diseases: Partial<
-      ["cardiovascular", "lung", "diabetes", "liver", "neurological"]
-    >;
-    neurological_details?: string;
-    drugs: YesNo;
-    drugs_details?: string;
-  }>;
-  medicalCare: Partial<{
-    familyDoctorInformed: "supervised" | "notInformed" | "noFamilyDoctor";
-    medicalTherapy: "informed" | "notInformed" | "unobtainable";
-    interest: YesNo;
-    interest_phone?: string;
-  }>;
-}
-
-export interface KirTracingTherapyResults {
-  [KirTracingDisease.COVID_19]: Partial<KirTracingTherapyResultsCovid19>;
-}
-
-export interface KirTracingTherapyResultsCovid19 {
-  medicalCare: Partial<{
-    treatment: YesNo;
-    treatment_location?: Partial<
-      ["familyDoctor", "specialist", "healthDepartment", "hospital"]
-    >;
-    hospital_inpatient?: YesNo;
-    hospital_inpatient_duration?: string;
-    hospital_icu?: YesNo;
-    hospital_oxygen?: YesNo;
-  }>;
-  paxlovid: Partial<{
+    kidneyDisease_yes_details: string;
+    diabetes: YesNo;
+    immuneDeficiency: YesNo;
+    immuneDeficiency_yes_details: string;
     medication: YesNo;
-    medication_startDate?: string;
-    prescription?: "familyDoctor" | "healthDepartment" | "others";
-    prescription_others?: string;
-    noMedication?:
-      | "patientDeclined"
-      | "notRecommended"
-      | "noPrescription"
-      | "others";
-    noMedication_others?: string;
-    symptoms_endDate: string;
+    medication_yes_details: string;
   }>;
-  feedback: Partial<{
-    satisfiedWithMedicalCare: YesNo;
-    satisfiedWithHealthDepartment: YesNo;
-    betterInformedByApp: YesNo;
-    suggestionsOrFeedback: string;
+}
+
+export interface KirTracingAidRequest {
+  resources: Partial<{
+    resourceDemand?: Partial<
+      ["medicalCare", "drugs", "groceries", "protectiveGear", "other"]
+    >;
+    resourceDemand_other_details: string;
+    resourceUsage: string;
   }>;
 }
 

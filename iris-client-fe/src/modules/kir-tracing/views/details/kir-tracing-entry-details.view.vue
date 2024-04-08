@@ -1,29 +1,12 @@
 <template>
   <v-card>
-    <v-card-title> Patientendaten </v-card-title>
+    <v-card-title> Personeninformationen </v-card-title>
     <v-card-text>
       <v-row>
         <v-col cols="12" sm="6">
           <v-row>
             <v-col cols="12">
               <info-grid :content="reportInfo" />
-            </v-col>
-            <v-col cols="12">
-              <v-row dense>
-                <v-col cols="12" md="6" align-self="center">
-                  <strong> Therapieempfehlung: </strong>
-                </v-col>
-                <v-col cols="12" md="6" align-self="center">
-                  <v-chip :color="therapyRecommendationColor" dark>
-                    {{ therapyRecommendationLabel }}
-                  </v-chip>
-                </v-col>
-              </v-row>
-              <v-row>
-                <v-col cols="12">
-                  <info-list :content="therapyInfo" />
-                </v-col>
-              </v-row>
             </v-col>
           </v-row>
         </v-col>
@@ -40,8 +23,8 @@
       </v-row>
       <v-divider class="my-4" />
       <v-tabs v-model="currentTab" @change="handleTabsChange">
-        <v-tab>Bewertungsbogen</v-tab>
-        <v-tab :disabled="!hasTherapyResults">Therapieergebnisse</v-tab>
+        <v-tab>Fragebogen</v-tab>
+        <v-tab :disabled="!hasAidRequest">Resourcenanfrage</v-tab>
         <v-tab :disabled="tracingMessages.length <= 0">
           {{ tracingMessages.length === 1 ? "Nachricht" : "Nachrichten" }}
         </v-tab>
@@ -143,41 +126,13 @@ export default class KirTracingEntryDetailsView extends Mixins(
     return [
       [["Kontakt", this.kirTracingEntry?.person.mobilePhone]],
       [["Meldung vom", getFormattedDate(this.kirTracingEntry?.createdAt)]],
-    ];
-  }
-
-  get therapyRecommendationColor() {
-    const therapy = kirTracingConstants.getTherapyRecommendationThreshold(
-      this.kirTracingEntry?.riskFactor,
-      this.kirTracingEntry?.symptomSeverity,
-      this.kirTracingEntry?.targetDisease
-    );
-    return kirTracingConstants.getThresholdColor(therapy);
-  }
-
-  get therapyRecommendationLabel() {
-    return kirTracingConstants.getTherapyRecommendationLabel(
-      this.kirTracingEntry?.riskFactor,
-      this.kirTracingEntry?.symptomSeverity,
-      this.kirTracingEntry?.targetDisease
-    );
-  }
-
-  get therapyInfo() {
-    return [
       [
-        "Riskobewertung",
-        kirTracingConstants.getRiskFactorLabel(
-          this.kirTracingEntry?.riskFactor,
-          this.kirTracingEntry?.targetDisease
-        ),
-      ],
-      [
-        "Schwere der Symptome",
-        kirTracingConstants.getSymptomSeverityLabel(
-          this.kirTracingEntry?.symptomSeverity,
-          this.kirTracingEntry?.targetDisease
-        ),
+        [
+          "Riskobewertung",
+          kirTracingConstants.getRiskFactorLabel(
+            this.kirTracingEntry?.riskFactor
+          ),
+        ],
       ],
     ];
   }
@@ -193,8 +148,8 @@ export default class KirTracingEntryDetailsView extends Mixins(
     return this.kirTracingApi.fetchTracingEntryDetails.state.result;
   }
 
-  get hasTherapyResults() {
-    return pathsIn(this.kirTracingEntry?.therapyResults ?? {}).length > 0;
+  get hasAidRequest() {
+    return pathsIn(this.kirTracingEntry?.aidRequest ?? {}).length > 0;
   }
 
   get status(): KirTracingStatus {

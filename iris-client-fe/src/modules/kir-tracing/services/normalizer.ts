@@ -1,45 +1,16 @@
 import {
-  KirTracingAssessment,
-  KirTracingDisease,
   KirTracingEntry,
   KirTracingMessage,
   KirTracingPerson,
   KirTracingStatus,
-  KirTracingTherapyResults,
   Page,
 } from "@/api";
 import { normalizeData } from "@/utils/data";
 import { normalizePage } from "@/common/normalizer";
 import {
-  normalizeKirTracingAssessmentCovid19,
-  normalizeKirTracingTherapyResultsCovid19,
-} from "@/modules/kir-tracing/modules/covid19/services/normalizer";
-
-export const normalizeKirTracingAssessment = <D extends KirTracingDisease>(
-  source?: KirTracingAssessment[D],
-  disease?: D,
-  parse?: boolean
-): KirTracingAssessment[D] => {
-  switch (disease) {
-    case KirTracingDisease.COVID_19:
-      return normalizeKirTracingAssessmentCovid19(source, parse);
-    default:
-      throw Error("invalid disease type");
-  }
-};
-
-export const normalizeKirTracingTherapyResults = <D extends KirTracingDisease>(
-  source?: KirTracingTherapyResults[D],
-  disease?: D,
-  parse?: boolean
-): KirTracingTherapyResults[D] => {
-  switch (disease) {
-    case KirTracingDisease.COVID_19:
-      return normalizeKirTracingTherapyResultsCovid19(source, parse);
-    default:
-      throw Error("invalid disease type");
-  }
-};
+  normalizeKirTracingAssessment,
+  normalizeKirTracingKirAidRequest,
+} from "@/modules/kir-tracing/modules/biohazard/services/normalizer";
 
 export const normalizeKirTracingPerson = (
   source?: KirTracingPerson,
@@ -81,22 +52,11 @@ export const normalizeKirTracingEntry = (
   return normalizeData(
     source,
     (normalizer) => {
-      const targetDisease = normalizer(
-        "targetDisease",
-        KirTracingDisease.COVID_19
-      );
       const messages = normalizer("messages", undefined, "array") || [];
       return {
-        id: normalizer("id", undefined),
-        targetDisease: targetDisease,
-        assessment: normalizeKirTracingAssessment<typeof targetDisease>(
-          source?.assessment,
-          targetDisease
-        ),
-        therapyResults: normalizeKirTracingTherapyResults<typeof targetDisease>(
-          source?.therapyResults,
-          targetDisease
-        ),
+        id: normalizer("id"),
+        assessment: normalizeKirTracingAssessment(source?.assessment),
+        aidRequest: normalizeKirTracingKirAidRequest(source?.aidRequest),
         person: normalizeKirTracingPerson(source?.person),
         status: normalizer("status", KirTracingStatus.NEW),
         createdAt: normalizer("createdAt", undefined, "dateString"),
@@ -104,7 +64,6 @@ export const normalizeKirTracingEntry = (
           normalizeKirTracingMessage(message)
         ),
         riskFactor: normalizer("riskFactor", undefined, "number"),
-        symptomSeverity: normalizer("symptomSeverity", undefined, "number"),
       };
     },
     parse,

@@ -27,7 +27,7 @@ export const normalizeData = <T>(
   message?: string
 ): Complete<T> => {
   if (!isEnabled()) return source as T;
-  const normalizer = entryNormalizer(source);
+  const normalizer: EntryNormalizer<T> = entryNormalizer(source);
   return finalizeData(callback(normalizer), source, parse, message) as T;
 };
 
@@ -63,37 +63,26 @@ export const isEnabled = (): boolean => {
 
 export type EntryNormalizer<T> = <K extends keyof T>(
   key: K,
-  fallback: T[K],
+  fallback?: T[K],
   type?: DataTypeArg
 ) => T[K];
 
 const entryNormalizer =
   <T>(obj?: T) =>
-  <K extends keyof T>(
-    key: K,
-    fallback: T[K],
-    type: DataTypeArg = "string"
-  ): T[K] => {
-    return normalize<T, K>(obj, key, fallback, type);
+  <K extends keyof T>(key: K, fallback?: T[K], type?: DataTypeArg): T[K] => {
+    const value: T[K] = _get(obj, key);
+    return getNormalizedValue(value, fallback, type);
   };
-
-const normalize = <T, K extends keyof T>(
-  obj: T | unknown | undefined,
-  key: K,
-  fallback: T[K],
-  type: DataTypeArg = "string"
-): T[K] => {
-  const value: T[K] = _get(obj, key);
-  return getNormalizedValue(value, fallback, type);
-};
 
 export const getNormalizedValue = <T>(
   value: T | undefined,
-  fallback: T,
-  type: DataTypeArg = "string"
+  fallback?: T,
+  type?: DataTypeArg
 ): T => {
-  if (value !== undefined && validateType(value, type)) return value;
-  return fallback;
+  if (value !== undefined && validateType(value, type ?? DataType.string)) {
+    return value;
+  }
+  return fallback as T;
 };
 
 const validateType = (value: unknown, type: DataTypeArg): boolean => {
