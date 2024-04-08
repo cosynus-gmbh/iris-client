@@ -8,6 +8,7 @@ import iris.client_bff.config.SrpParamsConfig;
 import iris.client_bff.core.alert.AlertService;
 import iris.client_bff.core.database.HibernateSearcher;
 import iris.client_bff.kir_tracing.IncomingKirConnection.IncomingKirConnectionIdentifier;
+import iris.client_bff.kir_tracing.eps.KirBiohazardEventDto;
 import iris.client_bff.kir_tracing.eps.KirChallengeDto;
 import iris.client_bff.kir_tracing.eps.KirTracingController.KirAuthorizationResponseDto;
 import iris.client_bff.kir_tracing.eps.KirTracingController.KirConnectionDto;
@@ -27,6 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.hibernate.search.engine.search.predicate.dsl.PredicateFinalStep;
 import org.hibernate.search.engine.search.predicate.dsl.SearchPredicateFactory;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 import org.springframework.boot.context.properties.ConstructorBinding;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -50,9 +52,10 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 @Slf4j
+@ConfigurationPropertiesScan
 public class KirTracingService {
 
-    private static final String[] FIELDS = {"assessment", "therapyResults", "person.mobilePhone"};
+    private static final String[] FIELDS = {"assessment", "aidRequest", "person.mobilePhone"};
 
     private final ProxyServiceClient proxyClient;
     private final IncomingKirConnectionRepository incomingConnections;
@@ -68,6 +71,8 @@ public class KirTracingService {
     private final AlertService alertService;
     private final HibernateSearcher searcher;
     private final EncryptedConnectionsService encryptedConnectionsService;
+
+    private final KirBioHazardEventRepository bioHazardEventRepository;
 
     public KirConnectionResultDto requestIncomingKirConnectionParameters(KirConnectionDto connectionData) {
 
@@ -157,14 +162,14 @@ public class KirTracingService {
         return new KirFormSubmissionResultDto(targetForm.getAccessToken());
     }
 
-    public KirFormSubmissionResultDto updateKirTherapyResults(SRP6ClientCredentials credentials, String accessToken, JsonNode therapyResults) {
+    public KirFormSubmissionResultDto updateKirBiohazardExposureAidRequest(SRP6ClientCredentials credentials, String accessToken, JsonNode aidRequest) {
 
         KirTracingForm form = authorize(credentials, accessToken).form;
         KirTracingFormDto updatedForm = KirTracingFormDto.builder()
-                .therapyResults(therapyResults)
+                .aidRequest(aidRequest)
                 .build();
         form = mapper.update(form, updatedForm);
-        form.setStatus(KirTracingForm.Status.THERAPY_RESULTS_RECEIVED);
+        form.setStatus(KirTracingForm.Status.AID_REQUEST_RECEIVED);
         tracingForms.save(form);
 
         return new KirFormSubmissionResultDto(accessToken);
@@ -180,6 +185,11 @@ public class KirTracingService {
         return new KirFormSubmissionResultDto(accessToken);
     }
 
+    public KirBiohazardEventDto getBiohazardEvent() {
+        KirBiohazardEvent event = bioHazardEventRepository.findFirstByActiveIsTrue().orElseThrow();
+        return mapper.toDto(event);
+    }
+
     public KirFormSubmissionResultDto closeKirSession(
             SRP6ClientCredentials credentials,
             String accessToken
@@ -193,11 +203,11 @@ public class KirTracingService {
     public KirFormSubmissionStatusDto getKirFormSubmissionStatus(SRP6ClientCredentials credentials, String accessToken) {
         KirTracingForm form = authorize(credentials, accessToken).form;
         String assessment = form.getAssessment();
-        String therapyResults = form.getTherapyResults();
+        String aidRequest = form.getAidRequest();
         return new KirFormSubmissionStatusDto(
                 form.getCreatedAt().toString(),
                 (assessment != null && !assessment.isEmpty()),
-                (therapyResults != null && !therapyResults.isEmpty())
+                (aidRequest != null && !aidRequest.isEmpty())
         );
     }
 
@@ -270,7 +280,9 @@ public class KirTracingService {
     }
 
     public KirFormSubmissionResultDto generateAccessToken() {
+        KirBiohazardEvent biohazardEvent = bioHazardEventRepository.findFirstByActiveIsTrue().orElseThrow();
         KirTracingForm tracingForm = KirTracingForm.builder()
+                .event(biohazardEvent)
                 .build();
 
         tracingForms.save(tracingForm);

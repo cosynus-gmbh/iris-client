@@ -202,7 +202,6 @@ class KirTracingEpsTest {
         KirTracingForm kirTracingForm = kirTracingForms.findByAccessTokenAndDeletedAtIsNull(accessToken).get();
 
         assertEquals(kirTracingForm.getAccessToken(), accessToken);
-        assertEquals(kirTracingForm.getTargetDisease(), KirTracingForm.Disease.COVID_19);
 
         assertEquals(formsCount + 1, kirTracingForms.count());
     }
@@ -245,7 +244,6 @@ class KirTracingEpsTest {
         assertEquals(verifier.toString(16), submittedFormInDb.getSrpVerifier());
         assertEquals(salt.toString(16), submittedFormInDb.getSrpSalt());
         assertEquals(initialForm.getAccessToken(), accessToken);
-        assertEquals(submittedFormInDb.getTargetDisease(), KirTracingForm.Disease.COVID_19);
 
         assertEquals(formsCount + 1, kirTracingForms.count());
     }
@@ -290,7 +288,6 @@ class KirTracingEpsTest {
         assertEquals(verifier.toString(16), submittedFormInDb.getSrpVerifier());
         assertEquals(salt.toString(16), submittedFormInDb.getSrpSalt());
         assertEquals(submittedFormInDb.getAccessToken(), initialForm.getAccessToken());
-        assertEquals(submittedFormInDb.getTargetDisease(), KirTracingForm.Disease.COVID_19);
         assertNotNull(submittedFormInDb.getSrpServerSession());
         assertEquals(submittedFormInDb.getSrpServerSession().getPublicServerValue(), BigIntegerUtils.fromHex(challenge));
 
@@ -298,8 +295,8 @@ class KirTracingEpsTest {
     }
 
     @Test
-    @DisplayName("submit therapy results: valid request ⇒ 💾 kirtracingform + 🔙 auth token")
-    void submitTherapyResults_ValidRequest() throws Exception {
+    @DisplayName("submit biohazard exposure aid request: valid request ⇒ 💾 kirtracingform + 🔙 auth token")
+    void submitKirBiohazardExposureAidRequest_ValidRequest() throws Exception {
 
         UUID dat = getConnectionUuid();
 
@@ -323,7 +320,7 @@ class KirTracingEpsTest {
                 BigIntegerUtils.fromHex(serverChallenge));
 
         var response = given()
-                .body(String.format(VALID_SUBMIT_THERAPY_REQUEST, dat, credentials.A.toString(16), credentials.M1.toString(16), form.getAccessToken()))
+                .body(String.format(VALID_SUBMIT_BIOHAZARD_EXPOSURE_AID_REQUEST, dat, credentials.A.toString(16), credentials.M1.toString(16), form.getAccessToken()))
 
                 .when()
                 .post("/data-submission-rpc")
@@ -341,8 +338,8 @@ class KirTracingEpsTest {
         assertEquals(accessToken, formResult.getAccessToken());
         assertEquals(formsCount, kirTracingForms.count());
         assertNull(formResult.getSrpServerSession());
-       assertNotNull(formResult.getTherapyResults());
-       assertEquals(KirTracingForm.Status.THERAPY_RESULTS_RECEIVED, formResult.getStatus());
+       assertNotNull(formResult.getAidRequest());
+       assertEquals(KirTracingForm.Status.AID_REQUEST_RECEIVED, formResult.getStatus());
     }
 
 
@@ -466,7 +463,7 @@ class KirTracingEpsTest {
                 BigIntegerUtils.fromHex(serverChallenge));
 
         var response = given()
-                .body(String.format(VALID_SUBMIT_THERAPY_REQUEST, dat, credentials.A, credentials.M1, form.getAccessToken()))
+                .body(String.format(VALID_SUBMIT_BIOHAZARD_EXPOSURE_AID_REQUEST, dat, credentials.A, credentials.M1, form.getAccessToken()))
 
                 .when()
                 .post("/data-submission-rpc")
@@ -491,7 +488,7 @@ class KirTracingEpsTest {
 
 
         given()
-                .body(String.format(VALID_SUBMIT_THERAPY_REQUEST, dat, 1, 1, RandomStringUtils.randomAlphanumeric(10).toUpperCase()))
+                .body(String.format(VALID_SUBMIT_BIOHAZARD_EXPOSURE_AID_REQUEST, dat, 1, 1, RandomStringUtils.randomAlphanumeric(10).toUpperCase()))
 
                 .when()
                 .post("/data-submission-rpc")

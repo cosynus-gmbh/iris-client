@@ -5,7 +5,6 @@ import iris.client_bff.core.serialization.DefuseJsonString;
 import iris.client_bff.core.validation.AttackDetector;
 import iris.client_bff.core.validation.NoSignOfAttack;
 import iris.client_bff.core.validation.NoSignOfAttackJsonNode;
-import iris.client_bff.iris_messages.IrisMessage;
 import lombok.Builder;
 import lombok.Data;
 import lombok.ToString;
@@ -33,18 +32,13 @@ public class KirTracingFormDto {
 
     private Double riskFactor;
 
-    private Double symptomSeverity;
-
-    @NoSignOfAttack
-    private String targetDisease;
-
     private List<@Valid MessageDto> messages;
 
     @NoSignOfAttackJsonNode
     private JsonNode assessment;
 
     @NoSignOfAttackJsonNode
-    private JsonNode therapyResults;
+    private JsonNode aidRequest;
 
     private Instant createdAt;
 

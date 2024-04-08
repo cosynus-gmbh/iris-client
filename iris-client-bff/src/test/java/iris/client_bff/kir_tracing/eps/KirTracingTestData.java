@@ -53,11 +53,11 @@ public interface KirTracingTestData {
 			}
 			""";
 
-	String JSON_RPC_SUBMIT_THERAPY_REQUEST = """
+	String JSON_RPC_SUBMIT_BIOHAZARD_EXPOSURE_AID_REQUEST = """
 			{
 			    "id":"1",
 			    "jsonrpc":"2.0",
-			    "method":"submitKirTherapyResults",
+			    "method":"submitKirBiohazardExposureAidRequest",
 			    "params":{
 			    		"_client":{"name":"hd-1"},
 			    		%s
@@ -117,13 +117,13 @@ public interface KirTracingTestData {
 			"accessToken":"%s"
 			""");
 
-	String VALID_SUBMIT_THERAPY_REQUEST = String.format(JSON_RPC_SUBMIT_THERAPY_REQUEST, """
+	String VALID_SUBMIT_BIOHAZARD_EXPOSURE_AID_REQUEST = String.format(JSON_RPC_SUBMIT_BIOHAZARD_EXPOSURE_AID_REQUEST, """
 			"dataAuthorizationToken":"%s",
 			"a": "%s",
 			"m1": "%s",
 			"accessToken":"%s",
 			"form":{
-			"therapyResults": {
+			"aidRequest": {
 					"successful":true
 				}
 			}

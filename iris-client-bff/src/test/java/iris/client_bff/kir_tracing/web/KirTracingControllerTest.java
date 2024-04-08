@@ -103,7 +103,7 @@ class KirTracingControllerTest {
         var path = BASE_URL + "/" + form.getId();
 
         KirTracingFormStatusUpdateDto patch = KirTracingFormStatusUpdateDto.builder()
-                .status(KirTracingForm.Status.DONE)
+                .status(KirTracingForm.Status.CLOSED)
                 .build();
 
         ObjectMapper om = new ObjectMapper();
@@ -123,7 +123,7 @@ class KirTracingControllerTest {
         KirTracingForm updatedForm = kirTracingForms.findById(form.getId())
                 .get();
 
-        assertEquals(KirTracingForm.Status.DONE, updatedForm.getStatus());
+        assertEquals(KirTracingForm.Status.CLOSED, updatedForm.getStatus());
     }
 
     private Object[] getCommonChecks() {

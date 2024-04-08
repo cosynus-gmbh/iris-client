@@ -77,9 +77,9 @@ public class KirTracingControllerImpl implements KirTracingController {
     }
 
     @Override
-    public KirFormSubmissionResultDto submitKirTherapyResults(UUID dataAuthorizationToken, String a, String m1, String accessToken, JsonNode formDto) {
+    public KirFormSubmissionResultDto submitKirBiohazardExposureAidRequest(UUID dataAuthorizationToken, String a, String m1, String accessToken, JsonNode formDto) {
 
-        log.debug("Start submitting KIR therapy results (JSON-RPC interface)");
+        log.debug("Start submitting KIR biohazard exposure aid request (JSON-RPC interface)");
 
         if (!service.validateConnection(dataAuthorizationToken)) {
             throw new IllegalArgumentException("Unknown dataAuthorizationToken: " + dataAuthorizationToken);
@@ -87,9 +87,9 @@ public class KirTracingControllerImpl implements KirTracingController {
 
         SRP6ClientCredentials credentials = new SRP6ClientCredentials(BigIntegerUtils.fromHex(a), BigIntegerUtils.fromHex(m1));
 
-        var result = service.updateKirTherapyResults(credentials, accessToken, formDto);
+        var result = service.updateKirBiohazardExposureAidRequest(credentials, accessToken, formDto);
 
-        log.trace("Finish submitting KIR therapy results (JSON-RPC interface)");
+        log.trace("Finish submitting KIR biohazard exposure aid request (JSON-RPC interface)");
 
         return result;
     }
@@ -128,6 +128,11 @@ public class KirTracingControllerImpl implements KirTracingController {
         log.trace("Finish getting KIR form submission status (JSON-RPC interface)");
 
         return result;
+    }
+
+    @Override
+    public KirBiohazardEventDto getKirBiohazardEvent() {
+        return service.getBiohazardEvent();
     }
 
     @Override

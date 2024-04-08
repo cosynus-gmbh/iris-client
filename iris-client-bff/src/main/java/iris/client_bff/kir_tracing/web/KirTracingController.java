@@ -48,7 +48,6 @@ public class KirTracingController {
 		var sort = pageable.getSort();
 		if (sort.isEmpty()) {
 			sort = Sort.by("riskFactor").descending()
-					.and(Sort.by("symptomSeverity").descending())
 					.and(Sort.by("metadata.created").descending());
 		}
 		return PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), sort);

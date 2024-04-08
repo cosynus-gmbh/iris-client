@@ -52,31 +52,26 @@ public class KirTracingForm extends Aggregate<KirTracingForm, KirTracingForm.Kir
     @GenericField(sortable = Sortable.YES, searchable = Searchable.YES)
     private Double riskFactor;
 
-    @Column(columnDefinition = "DECIMAL(30,10)")
-    @GenericField(sortable = Sortable.YES, searchable = Searchable.YES)
-    private Double symptomSeverity;
-
     @FullTextField
     private String assessment;
 
     @FullTextField
-    private String therapyResults;
+    private String aidRequest;
 
     @OrderBy("metadata.created DESC")
     @OneToMany(mappedBy = "form", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     private List<KirTracingMessage> messages = new ArrayList<>();
+
+    @ManyToOne
+    @JoinColumn(name = "event_id", nullable = false)
+    @IndexedEmbedded(includeEmbeddedObjectId = true)
+    private KirBiohazardEvent event;
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     @GenericField(sortable = Sortable.YES)
     @Builder.Default
     private Status status = Status.NEW;
-
-    @Column(nullable = false)
-    @Enumerated(EnumType.STRING)
-    @GenericField(sortable = Sortable.YES)
-    @Builder.Default
-    private Disease targetDisease = Disease.COVID_19;
 
     @Column
     @Builder.Default
@@ -89,7 +84,7 @@ public class KirTracingForm extends Aggregate<KirTracingForm, KirTracingForm.Kir
         setSrpVerifier(null);
         setSrpSession(null);
         // maybe clear accessToken as well?
-        setTherapyResults("");
+        setAidRequest("");
         setAssessment("");
         setMessages(new ArrayList<>());
         setPerson(Person.builder().mobilePhone(getId().toString()).build());
@@ -144,10 +139,6 @@ public class KirTracingForm extends Aggregate<KirTracingForm, KirTracingForm.Kir
     }
 
     public enum Status {
-        NEW, PERSON_CONTACTED, DATA_CHANGED, THERAPY_RESULTS_RECEIVED, MESSAGE_RECEIVED, DONE
-    }
-
-    public enum Disease {
-        COVID_19
+        NEW, PERSON_CONTACTED, DATA_CHANGED, AID_REQUEST_RECEIVED, MESSAGE_RECEIVED, CLOSED
     }
 }
