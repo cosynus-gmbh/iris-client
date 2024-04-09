@@ -97,28 +97,23 @@ export default class KirTracingEntryAssessment extends KirTracingEntryAssessment
       ],
       [
         "Art",
-        join(
-          [
-            kirTracingConstants.valueLabel(data?.locationType, "locationType"),
-            data?.locationType_other_details,
-          ],
-          ": "
+        kirTracingConstants.withInlineDetails(
+          kirTracingConstants.valueLabel(data?.locationType, "locationType"),
+          data?.locationType_other_details
         ),
       ],
       ["Anzahl weiterer Personen", data?.numberOfPeople],
       [
-        "Schutzbedürftige Personen",
-        [
-          kirTracingConstants.valueLabel(data?.vulnerablePeople),
-          data?.vulnerablePeople_yes_details,
-        ],
+        "Schutzbedürftige Personen anwesend",
+        kirTracingConstants.yesNoWithDetails(data?.vulnerablePeople, {
+          yesDetails: data?.vulnerablePeople_yes_details,
+        }),
       ],
       [
         "Räumliche Trennung möglich",
-        [
-          kirTracingConstants.valueLabel(data?.spatialSeparationPossible),
-          data?.spatialSeparationPossible_details,
-        ],
+        kirTracingConstants.yesNoWithDetails(data?.spatialSeparationPossible, {
+          yesDetails: data?.spatialSeparationPossible_details,
+        }),
       ],
     ];
   }
@@ -135,12 +130,11 @@ export default class KirTracingEntryAssessment extends KirTracingEntryAssessment
       ],
       [
         "Atembeschwerden",
-        [
-          kirTracingConstants.valueLabel(data?.breathingDifficulties),
-          ...(data?.breathingDifficulties_yes_details ?? []).map((value) =>
-            kirTracingConstants.valueLabel(value, "breathingDifficulties")
-          ),
-        ],
+        kirTracingConstants.yesNoWithDetailsList(data?.breathingDifficulties, {
+          yesDetails: data?.breathingDifficulties_yes_details,
+          mapper: (value) =>
+            kirTracingConstants.valueLabel(value, "breathingDifficulties"),
+        }),
       ],
       [
         "Körpertemperatur",
@@ -151,9 +145,9 @@ export default class KirTracingEntryAssessment extends KirTracingEntryAssessment
       ],
       [
         "Übelkeit oder Erbrechen",
-        [
-          kirTracingConstants.valueLabel(data?.nauseaOrVomiting),
-          ...(data?.nauseaOrVomiting_yes_details ?? []).map((value) => {
+        kirTracingConstants.yesNoWithDetailsList(data?.nauseaOrVomiting, {
+          yesDetails: data?.nauseaOrVomiting_yes_details,
+          mapper: (value) => {
             const valueLabel = kirTracingConstants.valueLabel(value);
             if (value === "vomiting") {
               return kirTracingConstants.withCount(
@@ -162,8 +156,8 @@ export default class KirTracingEntryAssessment extends KirTracingEntryAssessment
               );
             }
             return valueLabel;
-          }),
-        ],
+          },
+        }),
       ],
       [
         "Durchfall",
@@ -174,26 +168,28 @@ export default class KirTracingEntryAssessment extends KirTracingEntryAssessment
       ],
       [
         "Hautausschlag oder Hautveränderungen bemerkt",
-        [kirTracingConstants.valueLabel(data?.rash), data?.rash_yes_details],
+        kirTracingConstants.yesNoWithDetails(data?.rash, {
+          yesDetails: data?.rash_yes_details,
+        }),
       ],
       [
         "Ungewöhnliche Blutungen bemerkt",
-        [
-          kirTracingConstants.valueLabel(data?.unusualBleeding),
-          ...(data?.unusualBleeding_yes_details ?? []).map((value) => {
+        kirTracingConstants.yesNoWithDetailsList(data?.unusualBleeding, {
+          yesDetails: data?.unusualBleeding_yes_details,
+          mapper: (value) => {
             const valueLabel = kirTracingConstants.valueLabel(
               value,
               "unusualBleeding"
             );
             if (value == "other") {
-              return join(
-                [valueLabel, data?.unusualBleeding_yes_details_other_details],
-                ": "
+              return kirTracingConstants.withInlineDetails(
+                valueLabel,
+                data?.unusualBleeding_yes_details_other_details
               );
             }
             return valueLabel;
-          }),
-        ],
+          },
+        }),
       ],
       ["Ergänzungen zum Gesundheitszustand", data?.healthConditionInfo],
     ];
@@ -207,27 +203,50 @@ export default class KirTracingEntryAssessment extends KirTracingEntryAssessment
       ],
       [
         "Chronische Atemwegserkrankung",
-        [
-          kirTracingConstants.valueLabel(data?.chronicRespiratoryDisease),
-          ...(data?.chronicRespiratoryDisease_yes_details ?? []).map(
-            (value) => {
+        kirTracingConstants.yesNoWithDetailsList(
+          data?.chronicRespiratoryDisease,
+          {
+            yesDetails: data?.chronicRespiratoryDisease_yes_details,
+            mapper: (value) => {
               const valueLabel = kirTracingConstants.valueLabel(
                 value,
                 "chronicRespiratoryDisease"
               );
               if (value === "other") {
-                return join(
-                  [
-                    valueLabel,
-                    data?.chronicRespiratoryDisease_yes_details_other_details,
-                  ],
-                  ": "
+                return kirTracingConstants.withInlineDetails(
+                  valueLabel,
+                  data?.chronicRespiratoryDisease_yes_details_other_details
                 );
               }
               return valueLabel;
-            }
-          ),
-        ],
+            },
+          }
+        ),
+      ],
+      [
+        "Erkrankung des Herz-Kreislauf-Systems",
+        kirTracingConstants.yesNoWithDetails(data?.cardiovascularDisease, {
+          yesDetails: data?.cardiovascularDisease_yes_details,
+        }),
+      ],
+      [
+        "Erkrankung der Nieren",
+        kirTracingConstants.yesNoWithDetails(data?.kidneyDisease, {
+          yesDetails: data?.kidneyDisease_yes_details,
+        }),
+      ],
+      ["Diabetes Mellitus", kirTracingConstants.valueLabel(data?.diabetes)],
+      [
+        "Immunschwäche",
+        kirTracingConstants.yesNoWithDetails(data?.immuneDeficiency, {
+          yesDetails: data?.immuneDeficiency_yes_details,
+        }),
+      ],
+      [
+        "regelmäßige Einnahme von Medikamenten",
+        kirTracingConstants.yesNoWithDetails(data?.medication, {
+          yesDetails: data?.medication_yes_details,
+        }),
       ],
     ];
   }

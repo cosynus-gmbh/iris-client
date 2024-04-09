@@ -4,7 +4,7 @@ import {
   KirTracingStatus,
 } from "@/api";
 
-import { join } from "@/utils/misc";
+import { isFalse, isTrue, join } from "@/utils/misc";
 
 const formValueLabels: Record<string, string> = {
   0: "Nein",
@@ -36,6 +36,11 @@ const formValueLabels: Record<string, string> = {
   "chronicRespiratoryDisease.bronchialAsthma": "Asthma bronchiale",
   "chronicRespiratoryDisease.copd": "COPD / chronische Bronchitis",
   "chronicRespiratoryDisease.other": "Sonstige",
+  "resourceDemand.medicalCare": "Medizinische Versorgung",
+  "resourceDemand.drugs": "Medikamente",
+  "resourceDemand.groceries": "Lebensmittel",
+  "resourceDemand.protectiveGear": "Schutzausrüstung",
+  "resourceDemand.other": "Sonstiges",
 };
 
 const valueLabel = (
@@ -116,11 +121,64 @@ const getThreshold = (
   }
 };
 
+const withInlineDetails = (
+  value: string,
+  details: string | undefined | null
+): string => {
+  return join([value, details], ": ");
+};
+
 const withCount = (
   value: string,
-  count: string | number | undefined
+  count: string | number | undefined | null
 ): string => {
-  return count === null ? value : `${value} (${count}x)`;
+  return !count ? value : `${value} (${count}x)`;
+};
+
+interface YesNoWithDetailsOptions {
+  yesDetails?: string | undefined;
+  noDetails?: string | undefined;
+  includeYesNo?: boolean | undefined;
+}
+
+const yesNoWithDetails = (
+  yesNo: string | number | boolean | undefined,
+  options: YesNoWithDetailsOptions
+): string | undefined => {
+  const { yesDetails, noDetails, includeYesNo } = options;
+  if (isTrue(yesNo)) {
+    if (includeYesNo !== false) {
+      return withInlineDetails(valueLabel("1"), yesDetails);
+    }
+    return yesDetails ?? valueLabel("1");
+  }
+  if (isFalse(yesNo)) {
+    if (includeYesNo !== false) {
+      return withInlineDetails(valueLabel("0"), noDetails);
+    }
+    return noDetails ?? valueLabel("0");
+  }
+  return;
+};
+
+interface YesNoWithDetailsListOptions {
+  mapper: (value: string | undefined) => string | undefined;
+  yesDetails?: Array<string | undefined>;
+  noDetails?: Array<string | undefined>;
+}
+
+const yesNoWithDetailsList = (
+  yesNo: string | number | boolean | undefined,
+  options: YesNoWithDetailsListOptions
+): Array<string | undefined> => {
+  const { mapper, yesDetails, noDetails } = options;
+  if (isTrue(yesNo)) {
+    return yesDetails?.map(mapper).filter((v) => v) ?? [valueLabel("1")];
+  }
+  if (isFalse(yesNo)) {
+    return noDetails?.map(mapper).filter((v) => v) ?? [valueLabel("0")];
+  }
+  return [];
 };
 
 const getRiskFactorLabel = (
@@ -171,7 +229,10 @@ const kirTracingConstants = {
   valueLabel,
   getRiskFactorLabel,
   getThresholdColor,
+  withInlineDetails,
   withCount,
+  yesNoWithDetails,
+  yesNoWithDetailsList,
 };
 
 export default kirTracingConstants;

@@ -34,7 +34,7 @@
           <kir-tracing-entry-assessment :tracing-entry="kirTracingEntry" />
         </v-tab-item>
         <v-tab-item>
-          <kir-tracing-entry-therapy-results :tracing-entry="kirTracingEntry" />
+          <kir-tracing-entry-aid-request :tracing-entry="kirTracingEntry" />
         </v-tab-item>
         <v-tab-item>
           <v-row>
@@ -91,13 +91,13 @@ import kirTracingConstants from "@/modules/kir-tracing/services/constants";
 import InfoList from "@/components/info-list.vue";
 import StatusChip from "@/components/status-chip.vue";
 import KirTracingEntryAssessment from "@/modules/kir-tracing/views/details/components/kir-tracing-entry-assessment.vue";
-import KirTracingEntryTherapyResults from "@/modules/kir-tracing/views/details/components/kir-tracing-entry-therapy-results.vue";
+import KirTracingEntryAidRequest from "@/modules/kir-tracing/views/details/components/kir-tracing-entry-aid-request.vue";
 import { pathsIn } from "@/utils/misc";
 
 @Component({
   components: {
     KirTracingEntryAssessment,
-    KirTracingEntryTherapyResults,
+    KirTracingEntryAidRequest,
     StatusChip,
     InfoList,
     KirTracingEntryStatusChange,
