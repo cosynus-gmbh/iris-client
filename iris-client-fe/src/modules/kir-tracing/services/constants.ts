@@ -61,8 +61,8 @@ const getStatusName = (status?: string): string => {
       return "Neu";
     case KirTracingStatus.CLOSED:
       return "Abgeschlossen";
-    case KirTracingStatus.DATA_CHANGED:
-      return "Daten geändert";
+    case KirTracingStatus.AID_PROVIDED:
+      return "Ressourcen bereitgestellt";
     case KirTracingStatus.PERSON_CONTACTED:
       return "Person kontaktiert";
     case KirTracingStatus.AID_REQUEST_RECEIVED:
@@ -89,7 +89,7 @@ const getStatusColor = (status?: string): string => {
       return "red";
     case KirTracingStatus.CLOSED:
       return "black";
-    case KirTracingStatus.DATA_CHANGED:
+    case KirTracingStatus.AID_PROVIDED:
       return "blue";
     case KirTracingStatus.PERSON_CONTACTED:
       return "green";

@@ -138,6 +138,6 @@ public class KirTracingForm extends Aggregate<KirTracingForm, KirTracingForm.Kir
     }
 
     public enum Status {
-        NEW, PERSON_CONTACTED, DATA_CHANGED, AID_REQUEST_RECEIVED, MESSAGE_RECEIVED, CLOSED
+        NEW, PERSON_CONTACTED, AID_REQUEST_RECEIVED, AID_PROVIDED, MESSAGE_RECEIVED, CLOSED
     }
 }

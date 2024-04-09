@@ -2034,7 +2034,7 @@ export interface MfaVerification {
 export enum KirTracingStatus {
   NEW = "NEW",
   PERSON_CONTACTED = "PERSON_CONTACTED",
-  DATA_CHANGED = "DATA_CHANGED",
+  AID_PROVIDED = "AID_PROVIDED",
   AID_REQUEST_RECEIVED = "AID_REQUEST_RECEIVED",
   MESSAGE_RECEIVED = "MESSAGE_RECEIVED",
   CLOSED = "CLOSED",
@@ -2042,6 +2042,7 @@ export enum KirTracingStatus {
 
 export enum EditableKirTracingStatus {
   PERSON_CONTACTED = "PERSON_CONTACTED",
+  AID_PROVIDED = "AID_PROVIDED",
   CLOSED = "CLOSED",
 }
 
