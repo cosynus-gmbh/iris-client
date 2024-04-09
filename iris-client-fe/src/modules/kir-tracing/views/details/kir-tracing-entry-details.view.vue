@@ -24,7 +24,13 @@
       <v-divider class="my-4" />
       <v-tabs v-model="currentTab" @change="handleTabsChange">
         <v-tab>Fragebogen</v-tab>
-        <v-tab :disabled="!hasAidRequest">Resourcenanfrage</v-tab>
+        <v-tab :disabled="aidRequests.length <= 0">
+          {{
+            aidRequests.length === 1
+              ? "Ressourcenanfrage"
+              : "Ressourcenanfragen"
+          }}
+        </v-tab>
         <v-tab :disabled="tracingMessages.length <= 0">
           {{ tracingMessages.length === 1 ? "Nachricht" : "Nachrichten" }}
         </v-tab>
@@ -34,7 +40,7 @@
           <kir-tracing-entry-assessment :tracing-entry="kirTracingEntry" />
         </v-tab-item>
         <v-tab-item>
-          <kir-tracing-entry-aid-request :tracing-entry="kirTracingEntry" />
+          <kir-tracing-entry-aid-requests :tracing-entry="kirTracingEntry" />
         </v-tab-item>
         <v-tab-item>
           <v-row>
@@ -91,13 +97,12 @@ import kirTracingConstants from "@/modules/kir-tracing/services/constants";
 import InfoList from "@/components/info-list.vue";
 import StatusChip from "@/components/status-chip.vue";
 import KirTracingEntryAssessment from "@/modules/kir-tracing/views/details/components/kir-tracing-entry-assessment.vue";
-import KirTracingEntryAidRequest from "@/modules/kir-tracing/views/details/components/kir-tracing-entry-aid-request.vue";
-import { pathsIn } from "@/utils/misc";
+import KirTracingEntryAidRequests from "@/modules/kir-tracing/views/details/components/kir-tracing-entry-aid-requests.vue";
 
 @Component({
   components: {
     KirTracingEntryAssessment,
-    KirTracingEntryAidRequest,
+    KirTracingEntryAidRequests,
     StatusChip,
     InfoList,
     KirTracingEntryStatusChange,
@@ -141,15 +146,15 @@ export default class KirTracingEntryDetailsView extends Mixins(
     return this.kirTracingEntry?.messages ?? [];
   }
 
+  get aidRequests() {
+    return this.kirTracingEntry?.aidRequests ?? [];
+  }
+
   kirTracingConstants = kirTracingConstants;
   getFormattedDate = getFormattedDate;
 
   get kirTracingEntry() {
     return this.kirTracingApi.fetchTracingEntryDetails.state.result;
-  }
-
-  get hasAidRequest() {
-    return pathsIn(this.kirTracingEntry?.aidRequest ?? {}).length > 0;
   }
 
   get status(): KirTracingStatus {

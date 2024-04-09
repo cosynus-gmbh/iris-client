@@ -123,7 +123,7 @@ const getThreshold = (
 
 const withInlineDetails = (
   value: string,
-  details: string | undefined | null
+  details: string | number | undefined | null
 ): string => {
   return join([value, details], ": ");
 };

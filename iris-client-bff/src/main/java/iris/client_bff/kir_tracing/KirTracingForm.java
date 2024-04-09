@@ -55,11 +55,12 @@ public class KirTracingForm extends Aggregate<KirTracingForm, KirTracingForm.Kir
     @FullTextField
     private String assessment;
 
-    @FullTextField
-    private String aidRequest;
+    @OrderBy("metadata.created DESC")
+    @OneToMany(mappedBy = "form", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<KirTracingAidRequest> aidRequests = new ArrayList<>();
 
     @OrderBy("metadata.created DESC")
-    @OneToMany(mappedBy = "form", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "form", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<KirTracingMessage> messages = new ArrayList<>();
 
     @ManyToOne
@@ -84,9 +85,7 @@ public class KirTracingForm extends Aggregate<KirTracingForm, KirTracingForm.Kir
         setSrpVerifier(null);
         setSrpSession(null);
         // maybe clear accessToken as well?
-        setAidRequest("");
         setAssessment("");
-        setMessages(new ArrayList<>());
         setPerson(Person.builder().mobilePhone(getId().toString()).build());
         return this;
     }

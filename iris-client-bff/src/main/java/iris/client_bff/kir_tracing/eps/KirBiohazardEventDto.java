@@ -15,6 +15,9 @@ import java.time.Instant;
 public class KirBiohazardEventDto {
 
 	@NoSignOfAttack
+	private String id;
+
+	@NoSignOfAttack
 	private String substance;
 
 	private Double latitude;

@@ -55,7 +55,7 @@ import java.util.UUID;
 @ConfigurationPropertiesScan
 public class KirTracingService {
 
-    private static final String[] FIELDS = {"assessment", "aidRequest", "person.mobilePhone"};
+    private static final String[] FIELDS = {"assessment", "person.mobilePhone"};
 
     private final ProxyServiceClient proxyClient;
     private final IncomingKirConnectionRepository incomingConnections;
@@ -162,16 +162,14 @@ public class KirTracingService {
         return new KirFormSubmissionResultDto(targetForm.getAccessToken());
     }
 
-    public KirFormSubmissionResultDto updateKirBiohazardExposureAidRequest(SRP6ClientCredentials credentials, String accessToken, JsonNode aidRequest) {
+    public KirFormSubmissionResultDto submitKirBiohazardExposureAidRequest(SRP6ClientCredentials credentials, String accessToken, KirTracingFormDto.AidRequestDto aidRequestDto) {
 
         KirTracingForm form = authorize(credentials, accessToken).form;
-        KirTracingFormDto updatedForm = KirTracingFormDto.builder()
-                .aidRequest(aidRequest)
-                .build();
-        form = mapper.update(form, updatedForm);
+        KirTracingAidRequest aidRequest = mapper.toEntity(aidRequestDto);
+        aidRequest.setForm(form);
+        form.getAidRequests().add(aidRequest);
         form.setStatus(KirTracingForm.Status.AID_REQUEST_RECEIVED);
         tracingForms.save(form);
-
         return new KirFormSubmissionResultDto(accessToken);
     }
 
@@ -203,11 +201,10 @@ public class KirTracingService {
     public KirFormSubmissionStatusDto getKirFormSubmissionStatus(SRP6ClientCredentials credentials, String accessToken) {
         KirTracingForm form = authorize(credentials, accessToken).form;
         String assessment = form.getAssessment();
-        String aidRequest = form.getAidRequest();
         return new KirFormSubmissionStatusDto(
                 form.getCreatedAt().toString(),
                 (assessment != null && !assessment.isEmpty()),
-                (aidRequest != null && !aidRequest.isEmpty())
+                (! form.getAidRequests().isEmpty())
         );
     }
 

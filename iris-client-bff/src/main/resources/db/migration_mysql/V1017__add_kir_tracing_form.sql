@@ -22,7 +22,6 @@ CREATE TABLE kir_tracing_form (
     status varchar(50) NOT NULL,
     risk_factor decimal(30,10) NULL,
     assessment text NULL,
-    aid_request text NULL,
     person_mobile_phone varchar(100) NULL,
     srp_salt varchar(512) NULL,
     srp_verifier text NULL,
@@ -50,5 +49,19 @@ CREATE TABLE kir_tracing_message (
     PRIMARY KEY (id),
     FOREIGN KEY (created_by) REFERENCES user_accounts(user_id),
     FOREIGN KEY (last_modified_by) REFERENCES user_accounts(user_id),
-    CONSTRAINT kir_tracing_message_fk FOREIGN KEY (form_id) REFERENCES kir_tracing_form(id)
+    FOREIGN KEY (form_id) REFERENCES kir_tracing_form(id)
+);
+
+CREATE TABLE kir_tracing_aid_request (
+    id uuid NOT NULL,
+    form_id uuid NOT NULL,
+    data text NOT NULL,
+    created timestamp NOT NULL,
+    last_modified timestamp NOT NULL,
+    created_by uuid NULL,
+    last_modified_by uuid NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (created_by) REFERENCES user_accounts(user_id),
+    FOREIGN KEY (last_modified_by) REFERENCES user_accounts(user_id),
+    FOREIGN KEY (form_id) REFERENCES kir_tracing_form(id)
 );

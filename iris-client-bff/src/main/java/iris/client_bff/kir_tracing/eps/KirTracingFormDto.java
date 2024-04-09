@@ -30,15 +30,14 @@ public class KirTracingFormDto {
     @NoSignOfAttack
     private String status;
 
-    private Double riskFactor;
-
-    private List<@Valid MessageDto> messages;
-
     @NoSignOfAttackJsonNode
     private JsonNode assessment;
 
-    @NoSignOfAttackJsonNode
-    private JsonNode aidRequest;
+    private List<@Valid AidRequestDto> aidRequests;
+
+    private Double riskFactor;
+
+    private List<@Valid MessageDto> messages;
 
     private Instant createdAt;
 
@@ -53,6 +52,16 @@ public class KirTracingFormDto {
 
     }
 
+    @Data
+    @Validated
+    public static class AidRequestDto {
+
+        @NoSignOfAttackJsonNode
+        private JsonNode data;
+
+        private Instant createdAt;
+
+    }
     @Data
     @Validated
     public static class MessageDto {

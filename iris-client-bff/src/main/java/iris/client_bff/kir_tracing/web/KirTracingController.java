@@ -2,6 +2,7 @@ package iris.client_bff.kir_tracing.web;
 
 import iris.client_bff.core.validation.NoSignOfAttack;
 import iris.client_bff.kir_tracing.KirTracingForm;
+import iris.client_bff.kir_tracing.eps.KirBiohazardEventDto;
 import iris.client_bff.kir_tracing.eps.KirTracingFormDto;
 import iris.client_bff.kir_tracing.KirTracingService;
 import iris.client_bff.kir_tracing.mapper.KirTracingFormDataMapper;
@@ -56,6 +57,11 @@ public class KirTracingController {
 	@GetMapping("/count/unsubmitted")
 	public Integer countUnsubmittedKirTracingForms() {
 		return service.countUnsubmittedKirTracingForms();
+	}
+
+	@GetMapping("/biohazard-event")
+	public KirBiohazardEventDto getBiohazardEvent() {
+		return service.getBiohazardEvent();
 	}
 
 	@GetMapping("/{formId}")

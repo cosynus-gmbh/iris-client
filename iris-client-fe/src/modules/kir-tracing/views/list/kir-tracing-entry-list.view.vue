@@ -11,13 +11,14 @@
       </v-col>
     </v-row>
     <v-card class="my-7">
-      <v-card-title>Kontakt Infizierte Risikogruppen</v-card-title>
+      <v-card-title>Ereignis</v-card-title>
       <v-card-subtitle v-if="fetchCount.state.result > 0">
         {{ fetchCount.state.result }} von
         {{ totalElements + fetchCount.state.result }} Person(en) haben das
         Formular ausgefüllt, jedoch nicht abgesendet.
       </v-card-subtitle>
       <v-card-text>
+        <info-grid :content="biohazardEvent" />
         <search-field v-model="query.search" />
         <sortable-data-table
           class="mt-5"
@@ -75,9 +76,13 @@ import BtnToggleSelect from "@/components/btn-toggle-select.vue";
 import { getEnumKeys } from "@/utils/data";
 import { KirTracingStatus } from "@/api";
 import KirTracingEntryDeleteButton from "@/modules/kir-tracing/views/details/components/kir-tracing-entry-delete-button.vue";
+import InfoGrid from "@/components/info-grid.vue";
+import { getFormattedDate } from "@/utils/date";
+import { join } from "@/utils/misc";
 
 @Component({
   components: {
+    InfoGrid,
     KirTracingEntryDeleteButton,
     BtnToggleSelect,
     StatusChip,
@@ -92,6 +97,7 @@ export default class KirTracingEntryListView extends Vue {
   fetchPage = kirTracingApi.fetchPageTracingEntry();
   fetchCount = kirTracingApi.fetchUnsubmittedTracingEntryCount();
   deleteEntry = kirTracingApi.deleteTracingEntry();
+  fetchBiohazardEvent = kirTracingApi.fetchBiohazardEvent();
   kirTracingConstants = kirTracingConstants;
   handleQueryUpdate(newValue: DataQuery) {
     this.fetchCount.execute();
@@ -101,6 +107,10 @@ export default class KirTracingEntryListView extends Vue {
       this.fetchPage.reset(["result"]);
     }
   }
+  mounted() {
+    this.fetchBiohazardEvent.execute();
+  }
+
   async deleteKirTracingEntry(id: string, query: DataQuery) {
     await this.deleteEntry.execute(id);
     this.handleQueryUpdate(query);
@@ -126,6 +136,44 @@ export default class KirTracingEntryListView extends Vue {
         params: { id: row.id },
       });
     }
+  }
+  get biohazardEvent() {
+    const data = this.fetchBiohazardEvent.state.result;
+    return [
+      [
+        ["Substanz", data?.substance],
+        [
+          "Ort",
+          [
+            kirTracingConstants.withInlineDetails(
+              "Breitengrad",
+              data?.latitude ?? "-"
+            ),
+            kirTracingConstants.withInlineDetails(
+              "Längengrad",
+              data?.longitude ?? "-"
+            ),
+            kirTracingConstants.withInlineDetails(
+              "Radius",
+              data?.radius ?? "-"
+            ),
+          ],
+        ],
+        [
+          "Zeitraum",
+          [
+            kirTracingConstants.withInlineDetails(
+              "Von",
+              getFormattedDate(data?.startDate)
+            ),
+            kirTracingConstants.withInlineDetails(
+              "Bis",
+              getFormattedDate(data?.endDate)
+            ),
+          ],
+        ],
+      ],
+    ];
   }
 }
 </script>

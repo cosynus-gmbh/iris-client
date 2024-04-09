@@ -2055,9 +2055,16 @@ export interface KirTracingEntry {
   status: KirTracingStatus;
   riskFactor?: number;
   assessment?: Partial<KirTracingAssessment>;
-  aidRequest?: Partial<KirTracingAidRequest>;
+  aidRequests?: Partial<KirTracingAidRequest>[];
   createdAt?: string;
   messages?: KirTracingMessage[];
+}
+
+export interface KirTracingBiohazardEvent extends GeoLocation {
+  radius: number;
+  startDate: Date | undefined;
+  endDate: Date | undefined;
+  substance: string;
 }
 
 export interface KirTracingPerson {
@@ -2166,6 +2173,11 @@ export interface KirTracingAssessment {
 }
 
 export interface KirTracingAidRequest {
+  data?: Partial<KirTracingAidRequestData>;
+  createdAt?: string;
+}
+
+export interface KirTracingAidRequestData {
   resources: Partial<{
     resourceDemand?: Partial<
       ["medicalCare", "drugs", "groceries", "protectiveGear", "other"]
@@ -2794,6 +2806,22 @@ export class IrisClientFrontendApi extends BaseAPI {
     );
   }
 
+  /**
+   * @summary Fetches active kir biohazard event
+   * @param {*} [options] Override http request option.
+   * @throws {RequiredError}
+   * @memberof IrisClientFrontendApi
+   */
+  public kirTracingBiohazardEventGet(
+    options?: RequestOptions
+  ): ApiResponse<KirTracingBiohazardEvent> {
+    return this.apiRequest(
+      "GET",
+      "/kir-tracing/biohazard-event",
+      null,
+      options
+    );
+  }
   /**
    * @summary Fetches two step authentication config
    * @param {*} [options] Override http request option.

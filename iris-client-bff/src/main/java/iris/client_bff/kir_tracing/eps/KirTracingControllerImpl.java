@@ -77,7 +77,7 @@ public class KirTracingControllerImpl implements KirTracingController {
     }
 
     @Override
-    public KirFormSubmissionResultDto submitKirBiohazardExposureAidRequest(UUID dataAuthorizationToken, String a, String m1, String accessToken, JsonNode formDto) {
+    public KirFormSubmissionResultDto submitKirBiohazardExposureAidRequest(UUID dataAuthorizationToken, String a, String m1, String accessToken, KirTracingFormDto.AidRequestDto aidRequestDto) {
 
         log.debug("Start submitting KIR biohazard exposure aid request (JSON-RPC interface)");
 
@@ -87,7 +87,7 @@ public class KirTracingControllerImpl implements KirTracingController {
 
         SRP6ClientCredentials credentials = new SRP6ClientCredentials(BigIntegerUtils.fromHex(a), BigIntegerUtils.fromHex(m1));
 
-        var result = service.updateKirBiohazardExposureAidRequest(credentials, accessToken, formDto);
+        var result = service.submitKirBiohazardExposureAidRequest(credentials, accessToken, aidRequestDto);
 
         log.trace("Finish submitting KIR biohazard exposure aid request (JSON-RPC interface)");
 

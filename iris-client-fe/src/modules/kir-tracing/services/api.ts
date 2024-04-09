@@ -52,12 +52,20 @@ const fetchUnsubmittedTracingEntryCount = () => {
   return asyncAction(action);
 };
 
+const fetchBiohazardEvent = () => {
+  const action = async () => {
+    return (await authClient.kirTracingBiohazardEventGet()).data;
+  };
+  return asyncAction(action);
+};
+
 export const kirTracingApi = {
   fetchPageTracingEntry,
   fetchTracingEntryDetails,
   fetchUnsubmittedTracingEntryCount,
   patchTracingEntry,
   deleteTracingEntry,
+  fetchBiohazardEvent,
 };
 
 export const bundleKirTracingApi = apiBundleProvider(kirTracingApi);

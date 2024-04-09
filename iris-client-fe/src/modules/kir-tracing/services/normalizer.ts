@@ -53,10 +53,13 @@ export const normalizeKirTracingEntry = (
     source,
     (normalizer) => {
       const messages = normalizer("messages", undefined, "array") || [];
+      const aidRequests = normalizer("aidRequests", undefined, "array") || [];
       return {
         id: normalizer("id"),
         assessment: normalizeKirTracingAssessment(source?.assessment),
-        aidRequest: normalizeKirTracingKirAidRequest(source?.aidRequest),
+        aidRequests: aidRequests.map((aidRequest) =>
+          normalizeKirTracingKirAidRequest(aidRequest)
+        ),
         person: normalizeKirTracingPerson(source?.person),
         status: normalizer("status", KirTracingStatus.NEW),
         createdAt: normalizer("createdAt", undefined, "dateString"),

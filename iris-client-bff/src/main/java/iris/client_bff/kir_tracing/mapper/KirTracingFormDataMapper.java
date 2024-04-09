@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import iris.client_bff.config.MapStructCentralConfig;
 
 import iris.client_bff.kir_tracing.KirBiohazardEvent;
+import iris.client_bff.kir_tracing.KirTracingAidRequest;
 import iris.client_bff.kir_tracing.KirTracingForm;
 import iris.client_bff.kir_tracing.KirTracingMessage;
 import iris.client_bff.kir_tracing.eps.KirBiohazardEventDto;
@@ -21,6 +22,8 @@ public interface KirTracingFormDataMapper {
     KirTracingForm.Person toEntity(KirTracingFormDto.PersonDto personDto);
 
     KirTracingMessage toEntity(KirTracingFormDto.MessageDto messageDto);
+
+    KirTracingAidRequest toEntity(KirTracingFormDto.AidRequestDto aidRequestDto);
 
     @Mapping(source = "status", target = "status")
     KirTracingFormDto toDto(KirTracingForm form);

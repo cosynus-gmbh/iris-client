@@ -1,5 +1,10 @@
 import { normalizeData } from "@/utils/data";
-import { KirTracingAidRequest, KirTracingAssessment, Place } from "@/api";
+import {
+  KirTracingAidRequest,
+  KirTracingAidRequestData,
+  KirTracingAssessment,
+  Place,
+} from "@/api";
 
 export const normalizeKirTracingPlace = (
   source?: Partial<Place>,
@@ -204,9 +209,9 @@ export const normalizeKirTracingAssessment = (
 };
 
 export const normalizeKirTracingKirAidRequestResources = (
-  source?: Partial<KirTracingAidRequest["resources"]>,
+  source?: Partial<KirTracingAidRequestData["resources"]>,
   parse?: boolean
-): Partial<KirTracingAidRequest["resources"]> => {
+): Partial<KirTracingAidRequestData["resources"]> => {
   return normalizeData(
     source,
     (normalizer) => {
@@ -219,7 +224,23 @@ export const normalizeKirTracingKirAidRequestResources = (
       };
     },
     parse,
-    "KirTracingAidRequest.resources"
+    "KirTracingAidRequestData.resources"
+  );
+};
+
+export const normalizeKirTracingKirAidRequestData = (
+  source?: Partial<KirTracingAidRequestData>,
+  parse?: boolean
+): Partial<KirTracingAidRequestData> => {
+  return normalizeData(
+    source,
+    () => {
+      return {
+        resources: normalizeKirTracingKirAidRequestResources(source?.resources),
+      };
+    },
+    parse,
+    "KirTracingAidRequestData"
   );
 };
 
@@ -229,9 +250,10 @@ export const normalizeKirTracingKirAidRequest = (
 ): Partial<KirTracingAidRequest> => {
   return normalizeData(
     source,
-    () => {
+    (normalizer) => {
       return {
-        resources: normalizeKirTracingKirAidRequestResources(source?.resources),
+        data: normalizeKirTracingKirAidRequestData(source?.data),
+        createdAt: normalizer("createdAt", undefined, "dateString"),
       };
     },
     parse,

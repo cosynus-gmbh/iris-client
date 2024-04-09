@@ -338,7 +338,7 @@ class KirTracingEpsTest {
         assertEquals(accessToken, formResult.getAccessToken());
         assertEquals(formsCount, kirTracingForms.count());
         assertNull(formResult.getSrpServerSession());
-       assertNotNull(formResult.getAidRequest());
+        assertThat(formResult.getAidRequests()).isNotEmpty();
        assertEquals(KirTracingForm.Status.AID_REQUEST_RECEIVED, formResult.getStatus());
     }
 

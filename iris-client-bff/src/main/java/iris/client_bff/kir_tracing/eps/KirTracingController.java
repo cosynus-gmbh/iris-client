@@ -65,7 +65,7 @@ public interface KirTracingController {
             @JsonRpcParam(value = "a") @NotNull String a,
             @JsonRpcParam(value = "m1") @NotNull String m1,
             @JsonRpcParam(value = "accessToken") @NotNull @NoSignOfAttack String accessToken,
-            @JsonRpcParam(value = "form") @NoSignOfAttackJsonNode @NotNull @Valid JsonNode aidRequest
+            @JsonRpcParam(value = "form") @NotNull @Valid KirTracingFormDto.AidRequestDto aidRequestDto
     );
 
     KirFormSubmissionResultDto submitKirMessage(
