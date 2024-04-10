@@ -17,6 +17,7 @@ import iris.client_bff.kir_tracing.eps.KirTracingController.KirFormSubmissionRes
 import iris.client_bff.kir_tracing.eps.KirTracingController.KirFormSubmissionStatusDto;
 import iris.client_bff.kir_tracing.eps.KirTracingFormDto;
 import iris.client_bff.kir_tracing.mapper.KirTracingFormDataMapper;
+import iris.client_bff.kir_tracing.web.KirBiohazardEventUpdateDto;
 import iris.client_bff.kir_tracing.web.KirTracingFormStatusUpdateDto;
 import iris.client_bff.proxy.IRISAnnouncementException;
 import iris.client_bff.proxy.ProxyServiceClient;
@@ -184,8 +185,29 @@ public class KirTracingService {
     }
 
     public KirBiohazardEventDto getBiohazardEvent() {
-        KirBiohazardEvent event = bioHazardEventRepository.findFirstByActiveIsTrue().orElseThrow();
+        KirBiohazardEvent event = bioHazardEventRepository.findFirstBy();
         return mapper.toDto(event);
+    }
+
+    public KirBiohazardEventDto getBiohazardEvent(KirBiohazardEvent.KirBiohazardEventIdentifier eventId) {
+        KirBiohazardEvent event = bioHazardEventRepository.findById(eventId).orElseThrow();
+        return mapper.toDto(event);
+    }
+
+    public KirBiohazardEventDto updateBiohazardEvent(
+            KirBiohazardEvent.KirBiohazardEventIdentifier eventId,
+            KirBiohazardEventUpdateDto updateDto
+    ) {
+        KirBiohazardEvent biohazardEvent = bioHazardEventRepository.findById(eventId).orElseThrow();
+
+        log.info("testi");
+        log.info(updateDto.toString());
+        log.info(biohazardEvent.getSubstance());
+
+        mapper.update(biohazardEvent, updateDto);
+        bioHazardEventRepository.save(biohazardEvent);
+
+        return mapper.toDto(biohazardEvent);
     }
 
     public KirFormSubmissionResultDto closeKirSession(

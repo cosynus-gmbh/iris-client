@@ -2061,12 +2061,32 @@ export interface KirTracingEntry {
   messages?: KirTracingMessage[];
 }
 
-export interface KirTracingBiohazardEvent extends GeoLocation {
-  radius: number;
-  startDate: Date | undefined;
-  endDate: Date | undefined;
-  substance: string;
+export interface KirTracingPlace extends GeoLocation {
+  location_id: string;
+  postcode: string;
+  city: string;
 }
+
+export interface KirTracingBiohazardEventLocation extends GeoLocation {
+  id?: string;
+  postcode?: string;
+  city?: string;
+}
+
+export interface KirTracingBiohazardEvent {
+  id?: string;
+  substance?: string;
+  startDate?: string;
+  endDate?: string;
+  location?: Partial<KirTracingBiohazardEventLocation>;
+  locationRadius?: number;
+  active?: boolean;
+}
+
+export type KirTracingBiohazardEventUpdate = Omit<
+  Partial<KirTracingBiohazardEvent>,
+  "id"
+>;
 
 export interface KirTracingPerson {
   mobilePhone: string;
@@ -2823,6 +2843,26 @@ export class IrisClientFrontendApi extends BaseAPI {
       options
     );
   }
+
+  /**
+   * @summary Patches kir biohazard event
+   * @param {string} eventId
+   * @param {KirTracingBiohazardEventUpdate} data
+   * @param {*} [options] Override http request option.
+   * @throws {RequiredError}
+   * @memberof IrisClientFrontendApi
+   */
+  public kirTracingBiohazardEventPatch(
+    eventId: string,
+    data: KirTracingBiohazardEventUpdate,
+    options?: RequestOptions
+  ): ApiResponse<KirTracingEntry> {
+    assertParamExists("kirTracingBiohazardEventPatch", "entryId", eventId);
+    assertParamExists("kirTracingBiohazardEventPatch", "data", data);
+    const path = `/kir-tracing/biohazard-event/${encodeURIComponent(eventId)}`;
+    return this.apiRequest("PATCH", path, data, options);
+  }
+
   /**
    * @summary Fetches two step authentication config
    * @param {*} [options] Override http request option.

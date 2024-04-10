@@ -1,12 +1,10 @@
 package iris.client_bff.kir_tracing.eps;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.googlecode.jsonrpc4j.JsonRpcError;
 import com.googlecode.jsonrpc4j.JsonRpcErrors;
 import com.googlecode.jsonrpc4j.JsonRpcParam;
 import iris.client_bff.core.validation.Base64;
 import iris.client_bff.core.validation.NoSignOfAttack;
-import iris.client_bff.core.validation.NoSignOfAttackJsonNode;
 import iris.client_bff.kir_tracing.KirTracingException;
 import iris.client_bff.vaccination_info.eps.InvalidPublicKeyException;
 import org.springframework.validation.annotation.Validated;

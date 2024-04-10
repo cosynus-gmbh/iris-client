@@ -10,6 +10,7 @@ import iris.client_bff.kir_tracing.KirTracingForm;
 import iris.client_bff.kir_tracing.KirTracingMessage;
 import iris.client_bff.kir_tracing.eps.KirBiohazardEventDto;
 import iris.client_bff.kir_tracing.eps.KirTracingFormDto;
+import iris.client_bff.kir_tracing.web.KirBiohazardEventUpdateDto;
 import org.mapstruct.*;
 
 import java.util.UUID;
@@ -25,10 +26,15 @@ public interface KirTracingFormDataMapper {
 
     KirTracingAidRequest toEntity(KirTracingFormDto.AidRequestDto aidRequestDto);
 
-    @Mapping(source = "status", target = "status")
     KirTracingFormDto toDto(KirTracingForm form);
 
+    KirBiohazardEventDto.LocationDto toDto(KirBiohazardEvent.Location location);
+
     KirBiohazardEventDto toDto(KirBiohazardEvent event);
+
+    KirBiohazardEvent toEntity(KirBiohazardEventUpdateDto dto);
+
+    KirBiohazardEvent.Location toEntity(KirBiohazardEventUpdateDto.LocationDto dto);
 
     default JsonNode map(String jsonString) {
         ObjectMapper objectMapper = new ObjectMapper();
@@ -45,6 +51,10 @@ public interface KirTracingFormDataMapper {
 
     @Mapping(target = "event", ignore = true)
     @BeanMapping(nullValuePropertyMappingStrategy =  NullValuePropertyMappingStrategy.IGNORE)
-    KirTracingForm update(@MappingTarget KirTracingForm entity, KirTracingFormDto updateEntity);
+    KirTracingForm update(@MappingTarget KirTracingForm form, KirTracingFormDto formDto);
+
+    @Mapping(target = "tracingForms", ignore = true)
+    @BeanMapping(nullValuePropertyMappingStrategy =  NullValuePropertyMappingStrategy.IGNORE)
+    KirBiohazardEvent update(@MappingTarget KirBiohazardEvent event, KirBiohazardEventUpdateDto updateDto);
 
 }

@@ -33,6 +33,7 @@ import { Component, Vue, Watch } from "vue-property-decorator";
 import DateInputField from "@/components/form/date-input-field.vue";
 import TimeInputField from "@/components/form/time-input-field.vue";
 import dayjs from "@/utils/date";
+import { join } from "@/utils/misc";
 
 const DateTimeInputFieldProps = Vue.extend({
   props: {
@@ -118,7 +119,12 @@ export default class DateTimeInputField extends DateTimeInputFieldProps {
   }
 
   setDateTime(): void {
-    const value = dayjs(this.date + " " + this.time, "YYYY-MM-DD HH:mm");
+    const dateFormat = this.date ? "YYYY-MM-DD" : "";
+    const timeFormat = this.time ? "HH:mm" : "";
+    const value = dayjs(
+      join([this.date, this.time], " "),
+      join([dateFormat, timeFormat], " ")
+    );
     const dateString = value.isValid() ? value.toISOString() : "";
     this.$emit("input", dateString);
   }

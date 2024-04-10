@@ -18,7 +18,26 @@
         Formular ausgefüllt, jedoch nicht abgesendet.
       </v-card-subtitle>
       <v-card-text>
-        <info-grid :content="biohazardEvent" />
+        <v-card outlined rounded="0">
+          <v-card-text>
+            <v-row>
+              <v-col>
+                <info-grid :content="biohazardEvent" />
+              </v-col>
+              <v-col cols="auto">
+                <v-btn
+                  icon
+                  large
+                  class="text-decoration-none"
+                  :to="{ name: 'kir-tracing-biohazard-event-edit' }"
+                  data-test="edit"
+                >
+                  <v-icon> mdi-pencil </v-icon>
+                </v-btn>
+              </v-col>
+            </v-row>
+          </v-card-text>
+        </v-card>
         <search-field v-model="query.search" />
         <sortable-data-table
           class="mt-5"
@@ -139,23 +158,37 @@ export default class KirTracingEntryListView extends Vue {
   }
   get biohazardEvent() {
     const data = this.fetchBiohazardEvent.state.result;
+    const location = data?.location;
     return [
       [
-        ["Substanz", data?.substance],
+        [
+          "Merkmale",
+          [
+            kirTracingConstants.withInlineDetails(
+              "Stoff",
+              data?.substance ?? "-"
+            ),
+            kirTracingConstants.withInlineDetails(
+              "Aktiv",
+              data?.active ? "Ja" : "Nein"
+            ),
+          ],
+        ],
         [
           "Ort",
           [
+            join([location?.postcode, location?.city], " "),
             kirTracingConstants.withInlineDetails(
               "Breitengrad",
-              data?.latitude ?? "-"
+              location?.latitude ?? "-"
             ),
             kirTracingConstants.withInlineDetails(
               "Längengrad",
-              data?.longitude ?? "-"
+              location?.longitude ?? "-"
             ),
             kirTracingConstants.withInlineDetails(
               "Radius",
-              data?.radius ?? "-"
+              data?.locationRadius ?? "-"
             ),
           ],
         ],

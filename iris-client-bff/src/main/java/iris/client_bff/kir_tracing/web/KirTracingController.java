@@ -1,6 +1,7 @@
 package iris.client_bff.kir_tracing.web;
 
 import iris.client_bff.core.validation.NoSignOfAttack;
+import iris.client_bff.kir_tracing.KirBiohazardEvent;
 import iris.client_bff.kir_tracing.KirTracingForm;
 import iris.client_bff.kir_tracing.eps.KirBiohazardEventDto;
 import iris.client_bff.kir_tracing.eps.KirTracingFormDto;
@@ -62,6 +63,14 @@ public class KirTracingController {
 	@GetMapping("/biohazard-event")
 	public KirBiohazardEventDto getBiohazardEvent() {
 		return service.getBiohazardEvent();
+	}
+
+	@PatchMapping("/biohazard-event/{eventId}")
+	public KirBiohazardEventDto updateBiohazardEvent(
+			@PathVariable KirBiohazardEvent.KirBiohazardEventIdentifier eventId,
+			@RequestBody @Valid @NotNull KirBiohazardEventUpdateDto updateDto
+	) {
+		return service.updateBiohazardEvent(eventId, updateDto);
 	}
 
 	@GetMapping("/{formId}")

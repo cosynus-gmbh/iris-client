@@ -6,7 +6,14 @@ import {
   normalizeKirTracingEntry,
   normalizePageKirTracingEntry,
 } from "@/modules/kir-tracing/services/normalizer";
-import { KirTracingEntryUpdate } from "@/api";
+import {
+  KirTracingBiohazardEventUpdate,
+  KirTracingEntryUpdate,
+  KirTracingPlace,
+} from "@/api";
+import { normalizeKirTracingBiohazardEvent } from "@/modules/kir-tracing/modules/biohazard/services/normalizer";
+import axios from "axios";
+import { parse } from "csv-parse/browser/esm/sync";
 
 const fetchPageTracingEntry = () => {
   const action = async (query: DataQuery) => {
@@ -54,7 +61,35 @@ const fetchUnsubmittedTracingEntryCount = () => {
 
 const fetchBiohazardEvent = () => {
   const action = async () => {
-    return (await authClient.kirTracingBiohazardEventGet()).data;
+    return normalizeKirTracingBiohazardEvent(
+      (await authClient.kirTracingBiohazardEventGet()).data,
+      true
+    );
+  };
+  return asyncAction(action);
+};
+
+const patchBiohazardEvent = () => {
+  const action = async (id: string, data: KirTracingBiohazardEventUpdate) => {
+    return normalizeKirTracingBiohazardEvent(
+      (await authClient.kirTracingBiohazardEventPatch(id, data)).data,
+      true
+    );
+  };
+  return asyncAction(action);
+};
+
+const fetchPlaces = () => {
+  const action = async () => {
+    const response = await axios.get<string>("/zip_coordinates.csv", {
+      headers: { "Content-Type": "text/csv" },
+    });
+    const places: KirTracingPlace[] = parse(response.data, {
+      columns: true,
+      skip_empty_lines: true,
+      delimiter: ";",
+    });
+    return places;
   };
   return asyncAction(action);
 };
@@ -66,6 +101,8 @@ export const kirTracingApi = {
   patchTracingEntry,
   deleteTracingEntry,
   fetchBiohazardEvent,
+  patchBiohazardEvent,
+  fetchPlaces,
 };
 
 export const bundleKirTracingApi = apiBundleProvider(kirTracingApi);

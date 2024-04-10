@@ -4,17 +4,14 @@ import iris.client_bff.core.model.Aggregate;
 import iris.client_bff.core.model.IdWithUuid;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
-import org.hibernate.search.engine.backend.types.Sortable;
-import org.hibernate.search.mapper.pojo.mapping.definition.annotation.GenericField;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.Indexed;
-import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.IndexedEmbedded;
 
 import javax.persistence.*;
 import java.io.Serial;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 
 @Entity
@@ -34,20 +31,7 @@ public class KirBiohazardEvent extends Aggregate<KirBiohazardEvent, KirBiohazard
 	@OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
 	private List<KirTracingForm> tracingForms = new ArrayList<>();
 
-	@Column(nullable = false)
-	@Enumerated(EnumType.STRING)
-	@GenericField(sortable = Sortable.YES)
-	private Substance substance = Substance.TOXIC_EXAMPLE;
-
-	@Column(columnDefinition = "DECIMAL(20,10)", nullable = false)
-	private Double latitude;
-
-	@Column(columnDefinition = "DECIMAL(20,10)", nullable = false)
-	private Double longitude;
-
-	// radius in meters
-	@Column(columnDefinition = "DECIMAL(25,5)", nullable = false)
-	private Double radius;
+	private String substance = null;
 
 	@Column
 	private Instant startDate = null;
@@ -56,6 +40,13 @@ public class KirBiohazardEvent extends Aggregate<KirBiohazardEvent, KirBiohazard
 	private Instant endDate = null;
 
 	private boolean active = false;
+
+	@IndexedEmbedded
+	private Location location = new Location();
+
+	// radius in meters
+	@Column(columnDefinition = "DECIMAL(25,5)", nullable = false)
+	private Double locationRadius;
 
 	@EqualsAndHashCode(callSuper = false)
 	@RequiredArgsConstructor(staticName = "of")
@@ -77,7 +68,28 @@ public class KirBiohazardEvent extends Aggregate<KirBiohazardEvent, KirBiohazard
 		}
 	}
 
-	public enum Substance {
-		TOXIC_EXAMPLE
+	@Embeddable
+	@Data
+	@Setter(AccessLevel.PACKAGE)
+	@Builder
+	@AllArgsConstructor(staticName = "of")
+	@RequiredArgsConstructor
+	public static class Location {
+
+		@Column(name = "location_id")
+		private String id;
+
+		@Column(name = "location_postcode")
+		private String postcode;
+
+		@Column(name = "location_city")
+		private String city;
+
+		@Column(name = "location_latitude", columnDefinition = "DECIMAL(30,20)", nullable = false)
+		private Double latitude;
+
+		@Column(name = "location_longitude", columnDefinition = "DECIMAL(30,20)", nullable = false)
+		private Double longitude;
+
 	}
 }

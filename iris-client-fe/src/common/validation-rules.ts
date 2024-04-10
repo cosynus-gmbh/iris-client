@@ -1,6 +1,15 @@
 import config from "@/config";
 import dayjs from "@/utils/date";
 import { some } from "lodash";
+import _get from "lodash/get";
+import _isFinite from "lodash/isFinite";
+import { GeoLocation } from "@/api";
+
+export type ValidationRule<T = never> = (value: T) => string | boolean;
+
+export type FormValidationRules<T = Record<string, unknown>> = {
+  [K in keyof T]: FormValidationRules<T[K]> | ValidationRule[];
+};
 
 const minLength =
   (min: number) =>
@@ -28,6 +37,26 @@ const defined = (v: unknown): string | boolean => {
 
 const location = (v: unknown): string | boolean =>
   !!v || "Bitte wählen Sie einen Ereignisort aus";
+
+const geoLocation = (v: GeoLocation | undefined): string | boolean => {
+  const latitude = _get(v, "latitude");
+  const longitude = _get(v, "longitude");
+  if (latitude && longitude) {
+    if (sanitised(`${latitude}`) && sanitised(`${longitude}`)) {
+      return true;
+    }
+  }
+  return `Bitte geben Sie eine gültige Geolocation an`;
+};
+
+const positiveNumber = (v: unknown): string | boolean => {
+  if (!v) return true;
+  const value = Number(`${v}`);
+  return (
+    (_isFinite(value) && value > 0) ||
+    "Bitte geben Sie eine gültige Zahl > 0 an"
+  );
+};
 
 const sanitised = (v?: string): string | boolean => {
   if (typeof v !== "string") return true; // we only check the length for strings
@@ -192,9 +221,9 @@ const dateStart = (v: string): string | boolean => {
 };
 
 const dateEnd =
-  (start: string) =>
-  (v: string): string | boolean => {
-    if (!start) return true;
+  (start: string | Date | undefined) =>
+  (v: string | undefined): string | boolean => {
+    if (!start || !v) return true;
     return (
       dayjs(v).isSameOrAfter(dayjs(start), "minute") ||
       "Bitte geben Sie einen Zeitpunkt an, der nach dem Beginn liegt"
@@ -211,6 +240,8 @@ const rules = {
   dateStart,
   dateEnd,
   location,
+  geoLocation,
+  positiveNumber,
 };
 
 export default rules;

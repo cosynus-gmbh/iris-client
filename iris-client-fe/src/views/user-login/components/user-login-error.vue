@@ -114,7 +114,7 @@ export default class UserLoginError extends UserLoginErrorProps {
     const remainingMs = dayjs(this.blockedUntil).diff(dayjs(), "milliseconds");
     this.blockedRemainingPercent =
       this.blockedUntilMs > 0 ? (remainingMs * 100) / this.blockedUntilMs : 0;
-    this.countDownTimeout = setTimeout(() => {
+    this.countDownTimeout = window.setTimeout(() => {
       if (this.blockedRemainingPercent > 0) {
         this.countDown();
       }

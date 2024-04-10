@@ -42,7 +42,7 @@ export default class IrisMessageListNavLink extends IrisMessageListNavLinkProps 
       fetchUnreadMessageCountApi.execute().catch(() => {
         // ignored
       });
-      this.pollingTimeout = setTimeout(this.fetchMessageCount, 30000);
+      this.pollingTimeout = window.setTimeout(this.fetchMessageCount, 30000);
     }
   }
 }

@@ -18,7 +18,7 @@ Vue.use(VueRouter);
 // TODO create router config which exports these constants
 
 export const menuEnabled = (key: string): boolean => {
-  const keys = process.env.VUE_APP_NAV_MENU_ITEMS.split(",");
+  const keys = (process.env.VUE_APP_NAV_MENU_ITEMS ?? "").split(",");
   return _includes(keys, key);
 };
 
@@ -117,7 +117,7 @@ export const routes: Array<RouteConfig> = [
       ),
   },
   {
-    path: "/kir-tracing-entry/list",
+    path: "/kir-tracing/entry/list",
     name: "kir-tracing-entry-list" /* Caution: This acts as an identifier! */,
     meta: {
       menu: menuEnabled("kir-tracing"),
@@ -129,7 +129,7 @@ export const routes: Array<RouteConfig> = [
       ),
   },
   {
-    path: "/kir-tracing-entry/details/:id",
+    path: "/kir-tracing/entry/details/:id",
     name: "kir-tracing-entry-details" /* Caution: This acts as an identifier! */,
     meta: {
       menu: false,
@@ -137,6 +137,17 @@ export const routes: Array<RouteConfig> = [
     component: () =>
       import(
         /* webpackChunkName: "kir-tracing-entry-details" */ "../modules/kir-tracing/views/details/kir-tracing-entry-details.view.vue"
+      ),
+  },
+  {
+    path: "/kir-tracing/biohazard-event/edit",
+    name: "kir-tracing-biohazard-event-edit" /* Caution: This acts as an identifier! */,
+    meta: {
+      menu: false,
+    },
+    component: () =>
+      import(
+        /* webpackChunkName: "kir-tracing-biohazard-event-edit" */ "../modules/kir-tracing/views/edit/kir-tracing-biohazard-event-edit.view.vue"
       ),
   },
   {

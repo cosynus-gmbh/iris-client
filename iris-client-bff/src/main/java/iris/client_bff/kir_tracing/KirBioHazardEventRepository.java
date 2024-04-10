@@ -6,5 +6,6 @@ import java.util.Optional;
 
 public interface KirBioHazardEventRepository extends AggregateRepository<KirBiohazardEvent, KirBiohazardEvent.KirBiohazardEventIdentifier> {
 
+    KirBiohazardEvent findFirstBy();
     Optional<KirBiohazardEvent> findFirstByActiveIsTrue();
 }

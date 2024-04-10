@@ -3,6 +3,8 @@ import {
   KirTracingAidRequest,
   KirTracingAidRequestData,
   KirTracingAssessment,
+  KirTracingBiohazardEvent,
+  KirTracingBiohazardEventLocation,
   Place,
 } from "@/api";
 
@@ -258,5 +260,47 @@ export const normalizeKirTracingKirAidRequest = (
     },
     parse,
     "KirTracingAidRequest"
+  );
+};
+
+export const normalizeKirTracingBiohazardEventLocation = (
+  source?: Partial<KirTracingBiohazardEventLocation>,
+  parse?: boolean
+): Partial<KirTracingBiohazardEventLocation> => {
+  return normalizeData(
+    source,
+    (normalizer) => {
+      return {
+        id: normalizer("id"),
+        postcode: normalizer("postcode"),
+        city: normalizer("city"),
+        latitude: normalizer("latitude", undefined, "number"),
+        longitude: normalizer("longitude", undefined, "number"),
+      };
+    },
+    parse,
+    "KirTracingBiohazardEventLocation"
+  );
+};
+
+export const normalizeKirTracingBiohazardEvent = (
+  source?: Partial<KirTracingBiohazardEvent>,
+  parse?: boolean
+): Partial<KirTracingBiohazardEvent> => {
+  return normalizeData(
+    source,
+    (normalizer) => {
+      return {
+        id: normalizer("id"),
+        startDate: normalizer("startDate", undefined, "dateString"),
+        endDate: normalizer("endDate", undefined, "dateString"),
+        substance: normalizer("substance"),
+        location: normalizeKirTracingBiohazardEventLocation(source?.location),
+        locationRadius: normalizer("locationRadius", undefined, "number"),
+        active: normalizer("active", undefined, "boolean"),
+      };
+    },
+    parse,
+    "KirTracingBiohazardEvent"
   );
 };

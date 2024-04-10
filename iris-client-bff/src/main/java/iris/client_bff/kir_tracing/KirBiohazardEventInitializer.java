@@ -6,7 +6,6 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
-import java.util.Optional;
 
 @Component
 @AllArgsConstructor
@@ -19,15 +18,19 @@ public class KirBiohazardEventInitializer {
 	private final KirBioHazardEventRepository repository;
 
 	@PostConstruct
-	protected void createOrUpdateBiohazardEvent() {
-		Optional<KirBiohazardEvent> event = repository.findFirstByActiveIsTrue();
-		KirBiohazardEvent biohazardEvent = event.orElseGet(KirBiohazardEvent::new);
-		biohazardEvent
-				.setRadius(properties.getRadius())
-				.setLatitude(properties.getLatitude())
-				.setLongitude(properties.getLongitude())
-				.setSubstance(KirBiohazardEvent.Substance.TOXIC_EXAMPLE)
-				.setActive(true);
-		repository.save(biohazardEvent);
+	protected void createBiohazardEventIfNotExist() {
+		if (repository.count() == 0) {
+			KirBiohazardEvent biohazardEvent = new KirBiohazardEvent();
+			KirBiohazardEvent.Location location = biohazardEvent.getLocation()
+					.setLatitude(properties.getLatitude())
+					.setLongitude(properties.getLongitude());
+			biohazardEvent
+					.setLocation(location)
+					.setLocationRadius(properties.getRadius())
+					.setActive(true);
+			repository.save(biohazardEvent);
+		} else {
+			log.info("Initial kir biohazard event already exists.");
+		}
 	}
 }

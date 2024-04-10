@@ -47,6 +47,8 @@ import {
 import { DataQuery } from "@/api/common";
 import { vaccinationReportList } from "@/server/data/vaccination-reports";
 import store from "@/store";
+import _castArray from "lodash/castArray";
+import _head from "lodash/head";
 
 const authResponse = <T>(
   request?: Request,
@@ -189,7 +191,7 @@ export function makeMockAPIServer() {
             dummyDataRequests.filter((item) =>
               status ? item.status === status : true
             ),
-            page
+            _head(_castArray(page))
           )
         );
       });
@@ -237,7 +239,7 @@ export function makeMockAPIServer() {
             dummyDataRequestsCases.filter((item) =>
               status ? item.status === status : true
             ),
-            page
+            _head(_castArray(page))
           )
         );
       });
@@ -250,7 +252,8 @@ export function makeMockAPIServer() {
       this.get("/search", (schema, request) => {
         let data;
 
-        const searchQuery = request.queryParams?.search.toLowerCase();
+        const searchQuery =
+          _head(_castArray(request.queryParams?.search))?.toLowerCase() ?? "";
 
         if (searchMatches(searchQuery, ["pizza", "musterstraße", "mio"])) {
           data = {

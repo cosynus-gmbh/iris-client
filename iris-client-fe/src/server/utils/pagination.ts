@@ -20,7 +20,7 @@ type Named = {
 
 export function paginated<T extends Named>(
   items: T[],
-  page?: number | string
+  page?: number | string | null
 ): Page<T> {
   const pageId = Number(page || 0);
   return {
