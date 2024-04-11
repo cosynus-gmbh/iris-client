@@ -11,7 +11,7 @@ import {
   KirTracingEntryUpdate,
   KirTracingPlace,
 } from "@/api";
-import { normalizeKirTracingBiohazardEvent } from "@/modules/kir-tracing/modules/biohazard/services/normalizer";
+import { normalizeKirTracingBiohazardEvent } from "@/modules/kir-tracing/services/biohazard.normalizer";
 import axios from "axios";
 import { parse } from "csv-parse/browser/esm/sync";
 

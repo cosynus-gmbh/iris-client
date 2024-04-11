@@ -120,6 +120,10 @@ public class JacksonConfig {
 		@Override
 		public String deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException {
 
+			if (jp.getText().equals("-")) {
+				return "";
+			}
+
 			return isBlank(jp.getText())
 					? null
 					: StringDeserializer.instance.deserialize(jp, ctxt).trim();

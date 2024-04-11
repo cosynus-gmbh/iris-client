@@ -14,10 +14,25 @@
           <template v-if="Array.isArray(info)">
             <span
               class="d-block"
-              v-for="(item, itemIndex) in info"
-              :key="itemIndex"
+              v-for="(row, rowIndex) in info"
+              :key="rowIndex"
             >
-              {{ item }}
+              <template v-if="Array.isArray(row)">
+                <span
+                  :class="
+                    'd-inline-block' +
+                    (itemIndex < row.length - 1 ? ' mr-1' : '')
+                  "
+                  v-for="(item, itemIndex) in row"
+                  :key="itemIndex"
+                >
+                  <span v-if="itemIndex == 0"> {{ item }}:</span>
+                  <span v-else> {{ item }}</span>
+                </span>
+              </template>
+              <template v-else>
+                {{ row }}
+              </template>
             </span>
           </template>
           <template v-else>

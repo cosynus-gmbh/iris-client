@@ -87,7 +87,7 @@
             color="secondary"
             :disabled="disabled"
             plain
-            :to="{ name: 'iris-message-list' }"
+            :to="{ name: 'kir-tracing-entry-list' }"
             replace
             data-test="cancel"
           >
@@ -118,7 +118,7 @@ import {
   KirTracingBiohazardEvent,
   KirTracingBiohazardEventUpdate,
 } from "@/api";
-import { kirTracingApi } from "@/modules/kir-tracing/services/api";
+import { bundleKirTracingApi } from "@/modules/kir-tracing/services/api";
 import _defaultsDeep from "lodash/defaultsDeep";
 import rules, { FormValidationRules } from "@/common/validation-rules";
 import KirTracingPlacesSearchField from "@/modules/kir-tracing/views/edit/components/kir-tracing-places-search-field.vue";
@@ -126,6 +126,8 @@ import { ErrorMessage } from "@/utils/axios";
 import PasswordInputField from "@/components/form/password-input-field.vue";
 import DateTimeInputField from "@/components/form/date-time-input-field.vue";
 import InfoList from "@/components/info-list.vue";
+import { getApiErrorMessages, getApiLoading } from "@/utils/api";
+import { parseText } from "@/utils/text";
 
 type KirTracingBiohazardEventEditForm = {
   model: KirTracingBiohazardEventUpdate;
@@ -144,8 +146,10 @@ type KirTracingBiohazardEventEditForm = {
   },
 })
 export default class KirTracingBiohazardEventEditView extends Vue {
-  fetchBiohazardEvent = kirTracingApi.fetchBiohazardEvent();
-  patchBiohazardEvent = kirTracingApi.patchBiohazardEvent();
+  biohazardEventApi = bundleKirTracingApi([
+    "fetchBiohazardEvent",
+    "patchBiohazardEvent",
+  ]);
   $refs!: {
     form: HTMLFormElement;
   };
@@ -178,7 +182,7 @@ export default class KirTracingBiohazardEventEditView extends Vue {
   }
 
   mounted() {
-    this.fetchBiohazardEvent.execute();
+    this.biohazardEventApi.fetchBiohazardEvent.execute();
   }
 
   @Watch("biohazardEvent")
@@ -192,22 +196,26 @@ export default class KirTracingBiohazardEventEditView extends Vue {
   }
 
   get biohazardEvent(): KirTracingBiohazardEvent | null {
-    return this.fetchBiohazardEvent.state.result;
+    return this.biohazardEventApi.fetchBiohazardEvent.state.result;
   }
 
   get disabled(): boolean {
-    return this.fetchBiohazardEvent.state.loading;
+    return getApiLoading(this.biohazardEventApi);
   }
 
   get errors(): ErrorMessage[] {
-    return this.fetchBiohazardEvent.state.error;
+    return getApiErrorMessages(this.biohazardEventApi);
   }
 
   async submit(): Promise<void> {
     const valid = this.$refs.form.validate() as boolean;
     if (this.eventId && valid) {
       const payload: KirTracingBiohazardEventUpdate = this.form.model;
-      await this.patchBiohazardEvent.execute(this.eventId, payload);
+      const { substance, ...restPayload } = payload;
+      await this.biohazardEventApi.patchBiohazardEvent.execute(this.eventId, {
+        ...restPayload,
+        substance: parseText(substance, "-"),
+      });
       await this.$router.replace({ name: "kir-tracing-entry-list" });
     }
   }

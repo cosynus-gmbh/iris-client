@@ -10,7 +10,7 @@ import { normalizePage } from "@/common/normalizer";
 import {
   normalizeKirTracingAssessment,
   normalizeKirTracingKirAidRequest,
-} from "@/modules/kir-tracing/modules/biohazard/services/normalizer";
+} from "@/modules/kir-tracing/services/biohazard.normalizer";
 
 export const normalizeKirTracingPerson = (
   source?: KirTracingPerson,

@@ -1,6 +1,5 @@
 package iris.client_bff.kir_tracing;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.nimbusds.srp6.BigIntegerUtils;
 import com.nimbusds.srp6.SRP6ClientCredentials;
 import com.nimbusds.srp6.SRP6ServerSession;

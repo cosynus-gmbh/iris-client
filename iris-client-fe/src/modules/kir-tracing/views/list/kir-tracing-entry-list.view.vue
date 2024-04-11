@@ -18,26 +18,7 @@
         Formular ausgefüllt, jedoch nicht abgesendet.
       </v-card-subtitle>
       <v-card-text>
-        <v-card outlined rounded="0">
-          <v-card-text>
-            <v-row>
-              <v-col>
-                <info-grid :content="biohazardEvent" />
-              </v-col>
-              <v-col cols="auto">
-                <v-btn
-                  icon
-                  large
-                  class="text-decoration-none"
-                  :to="{ name: 'kir-tracing-biohazard-event-edit' }"
-                  data-test="edit"
-                >
-                  <v-icon> mdi-pencil </v-icon>
-                </v-btn>
-              </v-col>
-            </v-row>
-          </v-card-text>
-        </v-card>
+        <kir-tracing-biohazard-event-overview editable />
         <search-field v-model="query.search" />
         <sortable-data-table
           class="mt-5"
@@ -95,13 +76,11 @@ import BtnToggleSelect from "@/components/btn-toggle-select.vue";
 import { getEnumKeys } from "@/utils/data";
 import { KirTracingStatus } from "@/api";
 import KirTracingEntryDeleteButton from "@/modules/kir-tracing/views/details/components/kir-tracing-entry-delete-button.vue";
-import InfoGrid from "@/components/info-grid.vue";
-import { getFormattedDate } from "@/utils/date";
-import { join } from "@/utils/misc";
+import KirTracingBiohazardEventOverview from "@/modules/kir-tracing/components/kir-tracing-biohazard-event-overview.vue";
 
 @Component({
   components: {
-    InfoGrid,
+    KirTracingBiohazardEventOverview,
     KirTracingEntryDeleteButton,
     BtnToggleSelect,
     StatusChip,
@@ -116,7 +95,6 @@ export default class KirTracingEntryListView extends Vue {
   fetchPage = kirTracingApi.fetchPageTracingEntry();
   fetchCount = kirTracingApi.fetchUnsubmittedTracingEntryCount();
   deleteEntry = kirTracingApi.deleteTracingEntry();
-  fetchBiohazardEvent = kirTracingApi.fetchBiohazardEvent();
   kirTracingConstants = kirTracingConstants;
   handleQueryUpdate(newValue: DataQuery) {
     this.fetchCount.execute();
@@ -126,10 +104,6 @@ export default class KirTracingEntryListView extends Vue {
       this.fetchPage.reset(["result"]);
     }
   }
-  mounted() {
-    this.fetchBiohazardEvent.execute();
-  }
-
   async deleteKirTracingEntry(id: string, query: DataQuery) {
     await this.deleteEntry.execute(id);
     this.handleQueryUpdate(query);
@@ -155,58 +129,6 @@ export default class KirTracingEntryListView extends Vue {
         params: { id: row.id },
       });
     }
-  }
-  get biohazardEvent() {
-    const data = this.fetchBiohazardEvent.state.result;
-    const location = data?.location;
-    return [
-      [
-        [
-          "Merkmale",
-          [
-            kirTracingConstants.withInlineDetails(
-              "Stoff",
-              data?.substance ?? "-"
-            ),
-            kirTracingConstants.withInlineDetails(
-              "Aktiv",
-              data?.active ? "Ja" : "Nein"
-            ),
-          ],
-        ],
-        [
-          "Ort",
-          [
-            join([location?.postcode, location?.city], " "),
-            kirTracingConstants.withInlineDetails(
-              "Breitengrad",
-              location?.latitude ?? "-"
-            ),
-            kirTracingConstants.withInlineDetails(
-              "Längengrad",
-              location?.longitude ?? "-"
-            ),
-            kirTracingConstants.withInlineDetails(
-              "Radius",
-              data?.locationRadius ?? "-"
-            ),
-          ],
-        ],
-        [
-          "Zeitraum",
-          [
-            kirTracingConstants.withInlineDetails(
-              "Von",
-              getFormattedDate(data?.startDate)
-            ),
-            kirTracingConstants.withInlineDetails(
-              "Bis",
-              getFormattedDate(data?.endDate)
-            ),
-          ],
-        ],
-      ],
-    ];
   }
 }
 </script>

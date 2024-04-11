@@ -298,6 +298,8 @@ export const normalizeKirTracingBiohazardEvent = (
         location: normalizeKirTracingBiohazardEventLocation(source?.location),
         locationRadius: normalizer("locationRadius", undefined, "number"),
         active: normalizer("active", undefined, "boolean"),
+        createdAt: normalizer("createdAt", undefined, "dateString"),
+        lastModifiedAt: normalizer("lastModifiedAt", undefined, "dateString"),
       };
     },
     parse,

@@ -22,6 +22,7 @@
     <v-card class="my-7">
       <v-card-title>Neue KIR Formulareingänge</v-card-title>
       <v-card-text>
+        <kir-tracing-biohazard-event-overview />
         <sortable-data-table
           class="mt-5"
           :item-class="() => 'cursor-pointer'"
@@ -63,9 +64,11 @@ import StatusChip from "@/components/status-chip.vue";
 import kirTracingConstants from "@/modules/kir-tracing/services/constants";
 import BtnToggleSelect from "@/components/btn-toggle-select.vue";
 import KirTracingEntryDeleteButton from "@/modules/kir-tracing/views/details/components/kir-tracing-entry-delete-button.vue";
+import KirTracingBiohazardEventOverview from "@/modules/kir-tracing/components/kir-tracing-biohazard-event-overview.vue";
 
 @Component({
   components: {
+    KirTracingBiohazardEventOverview,
     KirTracingEntryDeleteButton,
     BtnToggleSelect,
     StatusChip,

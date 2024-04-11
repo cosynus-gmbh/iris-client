@@ -2081,11 +2081,13 @@ export interface KirTracingBiohazardEvent {
   location?: Partial<KirTracingBiohazardEventLocation>;
   locationRadius?: number;
   active?: boolean;
+  createdAt?: string;
+  lastModifiedAt?: string;
 }
 
 export type KirTracingBiohazardEventUpdate = Omit<
   Partial<KirTracingBiohazardEvent>,
-  "id"
+  "id" | "createdAt" | "lastModifiedAt"
 >;
 
 export interface KirTracingPerson {

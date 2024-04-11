@@ -1,13 +1,14 @@
 package iris.client_bff.kir_tracing.web;
 
+import iris.client_bff.core.validation.GeoLocationCoordinate;
 import iris.client_bff.core.validation.NoSignOfAttack;
 import lombok.Builder;
 import lombok.Data;
 import lombok.ToString;
 import org.springframework.validation.annotation.Validated;
 
-import javax.annotation.Nullable;
 import javax.validation.Valid;
+import javax.validation.constraints.Min;
 import javax.validation.constraints.Size;
 import java.time.Instant;
 
@@ -17,7 +18,6 @@ import java.time.Instant;
 @Builder
 public class KirBiohazardEventUpdateDto {
 
-	@Nullable
 	@NoSignOfAttack
 	@Size(max = 512)
 	private String substance;
@@ -31,6 +31,7 @@ public class KirBiohazardEventUpdateDto {
 	@Valid
 	private LocationDto location;
 
+	@Min(1)
 	private Double locationRadius;
 
 	@Data
@@ -49,8 +50,10 @@ public class KirBiohazardEventUpdateDto {
 		@Size(max = 512)
 		private String city;
 
+		@GeoLocationCoordinate
 		private Double latitude;
 
+		@GeoLocationCoordinate
 		private Double longitude;
 
 	}

@@ -12,6 +12,7 @@ import org.springframework.validation.annotation.Validated;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.Size;
 import java.time.Instant;
 import java.util.List;
 
@@ -27,7 +28,9 @@ public class KirTracingFormDto {
     @Valid
     private PersonDto person;
 
+    @Size(max = 50)
     @NoSignOfAttack
+    @DefuseJsonString(maxLength = 50)
     private String status;
 
     @NoSignOfAttackJsonNode
@@ -45,6 +48,7 @@ public class KirTracingFormDto {
     @Validated
     public static class PersonDto {
 
+        @Size(max = 100)
         @NotBlank(message = "api.constraints.person_mobilePhone")
         @NoSignOfAttack(payload = AttackDetector.Phone.class)
         @DefuseJsonString(maxLength = 100, payload = AttackDetector.Phone.class)
@@ -66,8 +70,9 @@ public class KirTracingFormDto {
     @Validated
     public static class MessageDto {
 
+        @Size(max = 6000)
         @NotBlank(message = "api.constraints.message")
-        @NoSignOfAttack()
+        @NoSignOfAttack
         @DefuseJsonString(maxLength = 6000)
         private String text;
 
