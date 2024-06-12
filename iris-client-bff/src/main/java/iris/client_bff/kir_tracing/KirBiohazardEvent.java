@@ -85,10 +85,10 @@ public class KirBiohazardEvent extends Aggregate<KirBiohazardEvent, KirBiohazard
 		@Column(name = "location_city")
 		private String city;
 
-		@Column(name = "location_latitude", columnDefinition = "DECIMAL(30,20)", nullable = false)
+		@Column(name = "location_latitude",length = 30, precision = 20, nullable = false)
 		private Double latitude;
 
-		@Column(name = "location_longitude", columnDefinition = "DECIMAL(30,20)", nullable = false)
+		@Column(name = "location_longitude", length = 30, precision = 20, nullable = false)
 		private Double longitude;
 
 	}

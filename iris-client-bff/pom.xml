@@ -12,7 +12,7 @@
 	</parent>
 	<groupId>iris-gateway</groupId>
 	<artifactId>iris-client-bff</artifactId>
-	<version>1.6.0-POST-RELEASE</version>
+	<version>biohazard</version>
 	<name>IRIS Client Backend for Frontend</name>
 	<description>Backend for frontend (BFF) of the client for the health departments. Communicates directly with the SORMAS of this department.</description>
 	<licenses>
@@ -370,6 +370,16 @@
 	<build>
 		<finalName>${project.artifactId}-${version.tag}</finalName>
 		<plugins>
+			<plugin>
+				<groupId>com.google.cloud.tools</groupId>
+				<artifactId>jib-maven-plugin</artifactId>
+				<version>3.4.1</version>
+				<configuration>
+					<container>
+						<mainClass>iris.client_bff.IrisClientBffApplication</mainClass>
+					</container>
+				</configuration>
+			</plugin>
 			<plugin>
 				<artifactId>maven-compiler-plugin</artifactId>
 				<configuration>
